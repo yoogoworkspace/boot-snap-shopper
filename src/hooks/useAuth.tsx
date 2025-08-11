@@ -21,23 +21,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const checkAdminStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error) {
+        console.log('Admin check error:', error);
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(!!data);
+      }
+    } catch (error) {
+      console.log('Admin check error:', error);
+      setIsAdmin(false);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check if user is admin
-          setTimeout(async () => {
-            const { data } = await supabase
-              .from('admin_users')
-              .select('id')
-              .eq('user_id', session.user.id)
-              .single();
-            setIsAdmin(!!data);
-          }, 0);
+          // Check if user is admin with a delay to avoid recursion
+          setTimeout(() => {
+            checkAdminStatus(session.user.id);
+          }, 100);
         } else {
           setIsAdmin(false);
         }
@@ -50,6 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminStatus(session.user.id);
+      }
       setLoading(false);
     });
 
@@ -66,13 +85,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl
       }
     });
+
+    // If signup is successful, add user to admin_users table
+    if (!error && data.user) {
+      const { error: adminError } = await supabase
+        .from('admin_users')
+        .insert([{
+          user_id: data.user.id,
+          email: email
+        }]);
+      
+      if (adminError) {
+        console.error('Error adding admin user:', adminError);
+      }
+    }
+
     return { error };
   };
 
