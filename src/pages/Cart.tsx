@@ -15,9 +15,9 @@ interface CartItem {
     name: string;
     price: number;
     image_url: string;
-  };
-  size: {
-    value: string;
+    size: {
+      value: string;
+    };
   };
 }
 
@@ -47,10 +47,10 @@ const Cart = () => {
             id,
             name,
             price,
-            image_url
-          ),
-          size:sizes (
-            value
+            image_url,
+            size:sizes (
+              value
+            )
           )
         `)
         .eq('session_id', sessionId);
@@ -130,7 +130,7 @@ const Cart = () => {
 
     const total = cartItems.reduce((sum, item) => sum + (item.model.price * item.quantity), 0);
     const orderDetails = cartItems.map(item => 
-      `${item.model.name} - Size ${item.size.value} - Qty: ${item.quantity} - $${(item.model.price * item.quantity).toFixed(2)}`
+      `${item.model.name} - Size ${item.model.size.value} - Qty: ${item.quantity} - $${(item.model.price * item.quantity).toFixed(2)}`
     ).join('\n');
 
     const message = `New Order Request:\n\n${orderDetails}\n\nTotal: $${total.toFixed(2)}\n\nPlease confirm this order.`;
@@ -199,7 +199,7 @@ const Cart = () => {
                       
                       <div className="flex-1">
                         <h3 className="font-semibold text-card-foreground">{item.model.name}</h3>
-                        <p className="text-sm text-muted-foreground">Size: {item.size.value}</p>
+                        <p className="text-sm text-muted-foreground">Size: {item.model.size.value}</p>
                         <p className="text-lg font-bold text-primary">${item.model.price}</p>
                       </div>
                       
