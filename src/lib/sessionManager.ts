@@ -23,11 +23,9 @@ export function getSessionId(): string {
  */
 export async function setDatabaseSessionContext(sessionId: string) {
   try {
-    // Set the session ID in the database context for RLS policy
-    await supabase.rpc('set_config', {
-      setting_name: 'app.current_session_id',
-      setting_value: sessionId,
-      is_local: true
+    // Set the session ID in the database context for RLS policy using our custom function
+    await supabase.rpc('set_session_context', {
+      session_id: sessionId
     });
   } catch (error) {
     console.error('Failed to set database session context:', error);

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getSessionId, withSessionContext } from "@/lib/sessionManager";
 
 interface CartItem {
   id: string;
@@ -30,7 +31,7 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [whatsappAccounts, setWhatsappAccounts] = useState<WhatsAppAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const sessionId = 'demo-session'; // In a real app, this would be from auth or local storage
+  const sessionId = getSessionId(); // Secure session ID from session manager
 
   useEffect(() => {
     fetchCartItems();
@@ -39,26 +40,29 @@ const Cart = () => {
 
   const fetchCartItems = async () => {
     try {
-      const { data, error } = await supabase
-        .from('cart_items')
-        .select(`
-          *,
-          model:models (
-            id,
-            name,
-            price,
-            image_url,
-            size:sizes (
-              value
+      await withSessionContext(async () => {
+        const { data, error } = await supabase
+          .from('cart_items')
+          .select(`
+            *,
+            model:models (
+              id,
+              name,
+              price,
+              image_url,
+              size:sizes (
+                value
+              )
             )
-          )
-        `)
-        .eq('session_id', sessionId);
+          `)
+          .eq('session_id', sessionId);
 
-      if (error) throw error;
-      setCartItems(data || []);
+        if (error) throw error;
+        setCartItems(data || []);
+      });
     } catch (error) {
       console.error('Error fetching cart items:', error);
+      toast.error("Failed to load cart items");
     } finally {
       setLoading(false);
     }
@@ -90,12 +94,14 @@ const Cart = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('cart_items')
-        .update({ quantity: newQuantity, updated_at: new Date().toISOString() })
-        .eq('id', id);
+      await withSessionContext(async () => {
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity: newQuantity, updated_at: new Date().toISOString() })
+          .eq('id', id);
 
-      if (error) throw error;
+        if (error) throw error;
+      });
       fetchCartItems();
     } catch (error) {
       toast.error("Failed to update quantity");
@@ -104,12 +110,14 @@ const Cart = () => {
 
   const removeItem = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('id', id);
+      await withSessionContext(async () => {
+        const { error } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('id', id);
 
-      if (error) throw error;
+        if (error) throw error;
+      });
       fetchCartItems();
       toast.success("Item removed from cart");
     } catch (error) {
