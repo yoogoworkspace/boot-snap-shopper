@@ -1,55 +1,38 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Zap } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Sparkles, Zap, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-}
+import { useCategories } from "@/hooks/useCategories";
+import { CategorySetup } from "@/components/CategorySetup";
 
 const Home = () => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const { isAdmin } = useAuth();
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { categories, loading, error } = useCategories();
 
   const getCategoryIcon = (name: string) => {
     if (name.includes('football')) return Zap;
+    if (name.includes('running')) return ShoppingBag;
     return Sparkles;
   };
 
   const getCategoryGradient = (name: string) => {
     if (name.includes('football')) return "from-blue-600 to-purple-600";
+    if (name.includes('running')) return "from-green-500 to-teal-500";
     return "from-orange-500 to-red-500";
   };
 
+  if (error) {
+    console.error('Categories error:', error);
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/50 to-background">
+      {/* Category Setup Component - runs silently */}
+      <CategorySetup />
+      
       {/* Hero Section */}
       <section className="section-padding">
         <div className="container-custom text-center animate-fade-in">
@@ -57,7 +40,7 @@ const Home = () => {
             BootBucket
           </h1>
           <p className="hero-subtitle mb-8 max-w-2xl mx-auto">
-            Discover premium footwear collections. From professional football boots to elegant formal shoes.
+            Discover premium footwear collections. From professional football boots to elegant formal shoes and high-performance running shoes.
           </p>
           <div className="flex justify-center space-x-4">
             <Button className="btn-hero">
@@ -85,8 +68,19 @@ const Home = () => {
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
+          ) : error ? (
+            <div className="text-center text-destructive mb-8">
+              <p>Error loading categories: {error}</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Please check the console for more details and ensure your database is properly configured.
+              </p>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="text-center text-muted-foreground mb-8">
+              <p>No categories available. Categories are being set up automatically...</p>
+            </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {categories.map((category, index) => {
                 const Icon = getCategoryIcon(category.name);
                 const gradient = getCategoryGradient(category.name);
@@ -149,15 +143,15 @@ const Home = () => {
             {[
               {
                 title: "Premium Quality",
-                description: "Carefully curated collection of high-quality footwear",
+                description: "Carefully curated collection of high-quality footwear from trusted brands",
               },
               {
                 title: "Fast Delivery",
-                description: "Quick and reliable delivery through WhatsApp ordering",
+                description: "Quick and reliable delivery through WhatsApp ordering system",
               },
               {
                 title: "Expert Support",
-                description: "Professional guidance to help you find the perfect fit",
+                description: "Professional guidance to help you find the perfect fit for your needs",
               },
             ].map((feature, index) => (
               <div
