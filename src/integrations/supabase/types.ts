@@ -16,76 +16,38 @@ export type Database = {
     Tables: {
       admin_users: {
         Row: {
-          created_at: string
+          created_at: string | null
           email: string
           id: string
-          user_id: string | null
+          password_hash: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           email: string
           id?: string
-          user_id?: string | null
+          password_hash: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           email?: string
           id?: string
-          user_id?: string | null
+          password_hash?: string
         }
         Relationships: []
       }
-      cart_items: {
-        Row: {
-          created_at: string
-          id: string
-          model_id: string | null
-          quantity: number
-          session_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          model_id?: string | null
-          quantity?: number
-          session_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          model_id?: string | null
-          quantity?: number
-          session_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cart_items_model_id_fkey"
-            columns: ["model_id"]
-            isOneToOne: false
-            referencedRelation: "models"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       categories: {
         Row: {
-          created_at: string
-          description: string | null
+          created_at: string | null
           id: string
           name: string
         }
         Insert: {
-          created_at?: string
-          description?: string | null
+          created_at?: string | null
           id?: string
           name: string
         }
         Update: {
-          created_at?: string
-          description?: string | null
+          created_at?: string | null
           id?: string
           name?: string
         }
@@ -94,7 +56,7 @@ export type Database = {
       models: {
         Row: {
           category_id: string | null
-          created_at: string
+          created_at: string | null
           id: string
           image_url: string | null
           name: string
@@ -103,7 +65,7 @@ export type Database = {
         }
         Insert: {
           category_id?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           image_url?: string | null
           name: string
@@ -112,7 +74,7 @@ export type Database = {
         }
         Update: {
           category_id?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           image_url?: string | null
           name?: string
@@ -139,19 +101,19 @@ export type Database = {
       sizes: {
         Row: {
           category_id: string | null
-          created_at: string
+          created_at: string | null
           id: string
           value: string
         }
         Insert: {
           category_id?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           value: string
         }
         Update: {
           category_id?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           value?: string
         }
@@ -168,26 +130,23 @@ export type Database = {
       whatsapp_accounts: {
         Row: {
           account_name: string | null
-          created_at: string
+          created_at: string | null
           id: string
           is_active: boolean | null
-          last_used: string | null
           phone_number: string
         }
         Insert: {
           account_name?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_active?: boolean | null
-          last_used?: string | null
           phone_number: string
         }
         Update: {
           account_name?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           is_active?: boolean | null
-          last_used?: string | null
           phone_number?: string
         }
         Relationships: []
@@ -197,14 +156,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_current_session_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      set_session_context: {
-        Args: { session_id: string }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

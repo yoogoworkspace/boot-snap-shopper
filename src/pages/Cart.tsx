@@ -6,20 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getSessionId, withSessionContext } from "@/lib/sessionManager";
 
 interface CartItem {
   id: string;
+  name: string;
+  price: number;
+  image_url: string;
+  size: string;
+  category: string;
   quantity: number;
-  model: {
-    id: string;
-    name: string;
-    price: number;
-    image_url: string;
-    size: {
-      value: string;
-    };
-  };
 }
 
 interface WhatsAppAccount {
@@ -30,42 +25,15 @@ interface WhatsAppAccount {
 const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [whatsappAccounts, setWhatsappAccounts] = useState<WhatsAppAccount[]>([]);
-  const [loading, setLoading] = useState(true);
-  const sessionId = getSessionId(); // Secure session ID from session manager
 
   useEffect(() => {
-    fetchCartItems();
+    loadCartItems();
     fetchWhatsAppAccounts();
   }, []);
 
-  const fetchCartItems = async () => {
-    try {
-      await withSessionContext(async () => {
-        const { data, error } = await supabase
-          .from('cart_items')
-          .select(`
-            *,
-            model:models (
-              id,
-              name,
-              price,
-              image_url,
-              size:sizes (
-                value
-              )
-            )
-          `)
-          .eq('session_id', sessionId);
-
-        if (error) throw error;
-        setCartItems(data || []);
-      });
-    } catch (error) {
-      console.error('Error fetching cart items:', error);
-      toast.error("Failed to load cart items");
-    } finally {
-      setLoading(false);
-    }
+  const loadCartItems = () => {
+    const items = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    setCartItems(items);
   };
 
   const fetchWhatsAppAccounts = async () => {
@@ -73,8 +41,7 @@ const Cart = () => {
       const { data, error } = await supabase
         .from('whatsapp_accounts')
         .select('phone_number, account_name')
-        .eq('is_active', true)
-        .order('created_at', { ascending: true });
+        .eq('is_active', true);
 
       if (error) throw error;
       setWhatsappAccounts(data || []);
@@ -83,46 +50,24 @@ const Cart = () => {
     }
   };
 
-  const updateQuantity = async (id: string, change: number) => {
-    const item = cartItems.find(item => item.id === id);
-    if (!item) return;
+  const updateQuantity = (id: string, change: number) => {
+    const updatedItems = cartItems.map(item => {
+      if (item.id === id) {
+        const newQuantity = item.quantity + change;
+        return newQuantity > 0 ? { ...item, quantity: newQuantity } : null;
+      }
+      return item;
+    }).filter(Boolean) as CartItem[];
 
-    const newQuantity = item.quantity + change;
-    if (newQuantity <= 0) {
-      removeItem(id);
-      return;
-    }
-
-    try {
-      await withSessionContext(async () => {
-        const { error } = await supabase
-          .from('cart_items')
-          .update({ quantity: newQuantity, updated_at: new Date().toISOString() })
-          .eq('id', id);
-
-        if (error) throw error;
-      });
-      fetchCartItems();
-    } catch (error) {
-      toast.error("Failed to update quantity");
-    }
+    setCartItems(updatedItems);
+    localStorage.setItem('cartItems', JSON.stringify(updatedItems));
   };
 
-  const removeItem = async (id: string) => {
-    try {
-      await withSessionContext(async () => {
-        const { error } = await supabase
-          .from('cart_items')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-      });
-      fetchCartItems();
-      toast.success("Item removed from cart");
-    } catch (error) {
-      toast.error("Failed to remove item");
-    }
+  const removeItem = (id: string) => {
+    const updatedItems = cartItems.filter(item => item.id !== id);
+    setCartItems(updatedItems);
+    localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+    toast.success("Item removed from cart");
   };
 
   const requestOrder = () => {
@@ -136,95 +81,93 @@ const Cart = () => {
       return;
     }
 
-    const total = cartItems.reduce((sum, item) => sum + (item.model.price * item.quantity), 0);
+    // Get a random WhatsApp account
+    const randomAccount = whatsappAccounts[Math.floor(Math.random() * whatsappAccounts.length)];
+    
+    const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const orderDetails = cartItems.map(item => 
-      `${item.model.name} - Size ${item.model.size.value} - Qty: ${item.quantity} - $${(item.model.price * item.quantity).toFixed(2)}`
+      `${item.name} - Size ${item.size} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`
     ).join('\n');
 
-    const message = `New Order Request:\n\n${orderDetails}\n\nTotal: $${total.toFixed(2)}\n\nPlease confirm this order.`;
+    const message = `🛍️ New Order Request:\n\n${orderDetails}\n\n💰 Total: $${total.toFixed(2)}\n\nPlease confirm this order. Thank you!`;
     const encodedMessage = encodeURIComponent(message);
     
-    // Use the first active WhatsApp account
-    const whatsappUrl = `https://wa.me/${whatsappAccounts[0].phone_number.replace('+', '')}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${randomAccount.phone_number.replace('+', '')}?text=${encodedMessage}`;
     
     window.open(whatsappUrl, '_blank');
-    toast.success("Order sent to WhatsApp!");
+    toast.success("Order sent via WhatsApp!");
   };
 
-  const total = cartItems.reduce((sum, item) => sum + (item.model.price * item.quantity), 0);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
       {/* Header */}
-      <header className="bg-card border-b border-border px-4 py-4">
-        <div className="container-custom flex items-center">
+      <div className="bg-white shadow-sm border-b px-4 py-4">
+        <div className="container mx-auto flex items-center">
           <Link to="/" className="mr-4">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-card-foreground">
+          <h1 className="text-2xl font-bold text-slate-900">
             Shopping Cart
           </h1>
         </div>
-      </header>
+      </div>
 
       {/* Cart Content */}
-      <section className="section-padding">
-        <div className="container-custom max-w-2xl mx-auto">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-2xl mx-auto">
           {cartItems.length === 0 ? (
-            <div className="text-center py-16 animate-fade-in">
-              <p className="text-xl text-muted-foreground mb-6">Your cart is empty</p>
+            <div className="text-center py-16">
+              <p className="text-xl text-slate-600 mb-6">Your cart is empty</p>
               <Link to="/">
-                <Button className="btn-hero">Start Shopping</Button>
+                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-full font-semibold">
+                  Start Shopping
+                </Button>
               </Link>
             </div>
           ) : (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               {/* Cart Items */}
               {cartItems.map((item, index) => (
                 <Card
                   key={item.id}
-                  className="animate-slide-up"
+                  className="shadow-lg hover:shadow-xl transition-all duration-300"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <CardContent className="p-4">
+                  <CardContent className="p-6">
                     <div className="flex items-center space-x-4">
                       <img
-                        src={item.model.image_url || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=150&h=150&fit=crop"}
-                        alt={item.model.name}
+                        src={item.image_url || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=150&h=150&fit=crop"}
+                        alt={item.name}
                         className="w-20 h-20 object-cover rounded-lg"
                       />
                       
                       <div className="flex-1">
-                        <h3 className="font-semibold text-card-foreground">{item.model.name}</h3>
-                        <p className="text-sm text-muted-foreground">Size: {item.model.size.value}</p>
-                        <p className="text-lg font-bold text-primary">${item.model.price}</p>
+                        <h3 className="font-bold text-slate-900 text-lg">{item.name}</h3>
+                        <p className="text-slate-600">Size: {item.size}</p>
+                        <p className="text-xl font-bold text-blue-600">${item.price}</p>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-3">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => updateQuantity(item.id, -1)}
                           disabled={item.quantity <= 1}
+                          className="h-8 w-8 p-0"
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
+                        <span className="w-8 text-center font-bold text-lg">{item.quantity}</span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => updateQuantity(item.id, 1)}
+                          className="h-8 w-8 p-0"
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
@@ -234,7 +177,7 @@ const Cart = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeItem(item.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -244,18 +187,18 @@ const Cart = () => {
               ))}
 
               {/* Order Summary */}
-              <Card className="animate-scale-in">
-                <CardContent className="p-6">
+              <Card className="shadow-xl bg-gradient-to-r from-blue-50 to-purple-50">
+                <CardContent className="p-8 text-center">
                   <div className="flex justify-between items-center mb-6">
-                    <span className="text-xl font-semibold">Total:</span>
-                    <span className="text-2xl font-bold text-primary">${total.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-slate-900">Total:</span>
+                    <span className="text-3xl font-bold text-blue-600">${total.toFixed(2)}</span>
                   </div>
                   
                   <Button
                     onClick={requestOrder}
-                    className="btn-accent w-full text-lg py-3"
+                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-4 text-lg rounded-xl transition-all duration-300 transform hover:scale-105"
                   >
-                    <MessageCircle className="h-5 w-5 mr-2" />
+                    <MessageCircle className="h-5 w-5 mr-3" />
                     Request Order via WhatsApp
                   </Button>
                 </CardContent>
@@ -263,7 +206,7 @@ const Cart = () => {
             </div>
           )}
         </div>
-      </section>
+      </div>
     </div>
   );
 };

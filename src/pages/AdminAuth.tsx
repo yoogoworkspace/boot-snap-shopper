@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -10,15 +11,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const AdminAuth = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("admin@bootbucket.com");
+  const [password, setPassword] = useState("admin123");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user, isAdmin } = useAuth();
+  const { signIn, user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if user is already authenticated and is admin
   useEffect(() => {
     if (user && isAdmin) {
       navigate("/admin");
@@ -30,19 +29,12 @@ const AdminAuth = () => {
     setLoading(true);
 
     try {
-      const { error } = isSignUp 
-        ? await signUp(email, password)
-        : await signIn(email, password);
+      const { error } = await signIn(email, password);
 
       if (error) {
-        toast.error(error.message);
+        toast.error("Invalid credentials");
       } else {
-        if (isSignUp) {
-          toast.success("Account created! Please check your email to verify.");
-        } else {
-          toast.success("Welcome back!");
-          // The useEffect above will handle the redirect
-        }
+        toast.success("Welcome back!");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -52,39 +44,46 @@ const AdminAuth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="mb-6">
           <Link to="/">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Button>
           </Link>
         </div>
         
-        <Card className="animate-fade-in">
-          <CardHeader className="text-center">
+        <Card className="shadow-xl">
+          <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-bold">
-              {isSignUp ? "Create Admin Account" : "Admin Login"}
+              Admin Login
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <CardContent className="p-8">
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800 font-medium">Demo Credentials:</p>
+              <p className="text-sm text-blue-600">Email: admin@bootbucket.com</p>
+              <p className="text-sm text-blue-600">Password: admin123</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-slate-700 font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                   placeholder="admin@bootbucket.com"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-slate-700 font-medium">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -92,13 +91,14 @@ const AdminAuth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-10"
                     placeholder="••••••••"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
+                    className="absolute right-0 top-0 h-full px-3 text-slate-500 hover:text-slate-700"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -106,20 +106,14 @@ const AdminAuth = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Loading..." : (isSignUp ? "Create Account" : "Sign In")}
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105" 
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-
-            <div className="mt-4 text-center">
-              <Button
-                variant="link"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm"
-              >
-                {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>

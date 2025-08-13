@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { CategoryManager } from "@/components/admin/CategoryManager";
+import { SizeManager } from "@/components/admin/SizeManager";
+import { ModelManager } from "@/components/admin/ModelManager";
 import { WhatsAppManager } from "@/components/admin/WhatsAppManager";
 
 const Admin = () => {
@@ -15,66 +17,67 @@ const Admin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <header className="bg-card border-b border-border px-4 py-4">
-        <div className="container-custom flex items-center justify-between">
+      <div className="bg-white shadow-sm border-b px-4 py-4">
+        <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center">
             <Link to="/" className="mr-4">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold text-card-foreground">
+            <h1 className="text-2xl font-bold text-slate-900">
               Admin Panel
             </h1>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-slate-600">
               {user?.email}
             </span>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSignOut}
+              className="text-slate-700 border-slate-300 hover:bg-slate-50"
+            >
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Admin Content */}
-      <section className="section-padding">
-        <div className="container-custom max-w-4xl mx-auto">
-          <Tabs defaultValue="categories" className="w-full animate-fade-in">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              <TabsTrigger value="sizes">Sizes</TabsTrigger>
-              <TabsTrigger value="models">Models</TabsTrigger>
-              <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          <Tabs defaultValue="categories" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm">
+              <TabsTrigger value="categories" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Categories</TabsTrigger>
+              <TabsTrigger value="sizes" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Sizes</TabsTrigger>
+              <TabsTrigger value="models" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Models</TabsTrigger>
+              <TabsTrigger value="whatsapp" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">WhatsApp</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="categories" className="space-y-6">
+            <TabsContent value="categories" className="space-y-6 mt-8">
               <CategoryManager />
             </TabsContent>
 
-            <TabsContent value="sizes" className="space-y-6">
-              <div className="text-center p-8 text-muted-foreground">
-                Size management coming soon...
-              </div>
+            <TabsContent value="sizes" className="space-y-6 mt-8">
+              <SizeManager />
             </TabsContent>
 
-            <TabsContent value="models" className="space-y-6">
-              <div className="text-center p-8 text-muted-foreground">
-                Model management coming soon...
-              </div>
+            <TabsContent value="models" className="space-y-6 mt-8">
+              <ModelManager />
             </TabsContent>
 
-            <TabsContent value="whatsapp" className="space-y-6">
+            <TabsContent value="whatsapp" className="space-y-6 mt-8">
               <WhatsAppManager />
             </TabsContent>
           </Tabs>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

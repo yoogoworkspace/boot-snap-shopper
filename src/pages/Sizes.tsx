@@ -10,110 +10,90 @@ interface Size {
   value: string;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-}
-
 const Sizes = () => {
   const { category } = useParams();
   const [sizes, setSizes] = useState<Size[]>([]);
-  const [categoryData, setCategoryData] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (category) {
-      fetchSizesAndCategory();
-    }
+    fetchSizes();
   }, [category]);
 
-  const fetchSizesAndCategory = async () => {
+  const fetchSizes = async () => {
     try {
-      // First get category data
-      const { data: categoryResult, error: categoryError } = await supabase
+      const categoryName = category === 'football-boots' ? 'Football Boots' : 'Running & Formal Shoes';
+      
+      const { data: categoryData, error: categoryError } = await supabase
         .from('categories')
-        .select('*')
-        .eq('name', category)
+        .select('id')
+        .eq('name', categoryName)
         .single();
 
       if (categoryError) throw categoryError;
-      setCategoryData(categoryResult);
 
-      // Then get sizes for this category
-      const { data: sizesResult, error: sizesError } = await supabase
+      const { data: sizesData, error: sizesError } = await supabase
         .from('sizes')
         .select('*')
-        .eq('category_id', categoryResult.id)
+        .eq('category_id', categoryData.id)
         .order('value', { ascending: true });
 
       if (sizesError) throw sizesError;
-      setSizes(sizesResult || []);
+      setSizes(sizesData || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching sizes:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const categoryName = categoryData?.name.split('-').map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ') || '';
+  const categoryName = category === 'football-boots' ? 'Football Boots' : 'Running & Formal Shoes';
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
       {/* Header */}
-      <header className="bg-card border-b border-border px-4 py-4">
-        <div className="container-custom flex items-center">
+      <div className="bg-white shadow-sm border-b px-4 py-4">
+        <div className="container mx-auto flex items-center">
           <Link to="/" className="mr-4">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-card-foreground">
+          <h1 className="text-2xl font-bold text-slate-900">
             {categoryName}
           </h1>
         </div>
-      </header>
+      </div>
 
       {/* Sizes Grid */}
-      <section className="section-padding">
-        <div className="container-custom">
-          <h2 className="text-xl font-semibold mb-8 text-center animate-fade-in">
-            Select Your Size
-          </h2>
-          
-          {sizes.length === 0 ? (
-            <div className="text-center text-muted-foreground">
-              No sizes available for this category.
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 max-w-4xl mx-auto">
-              {sizes.map((size, index) => (
-                <Link
-                  key={size.id}
-                  to={`/models/${category}/${size.value}`}
-                  className="animate-scale-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <div className="size-card hover:scale-105">
-                    {size.value}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+      <div className="container mx-auto px-4 py-12">
+        <h2 className="text-3xl font-bold text-center mb-12 text-slate-900">
+          Select Your Size
+        </h2>
+        
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 max-w-4xl mx-auto">
+          {sizes.map((size, index) => (
+            <Link
+              key={size.id}
+              to={`/models/${category}/${size.value}`}
+              className="animate-scale-in"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="bg-white rounded-xl p-6 text-center font-bold text-xl text-slate-700 hover:text-white hover:bg-gradient-to-br hover:from-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                {size.value}
+              </div>
+            </Link>
+          ))}
         </div>
-      </section>
+      </div>
     </div>
   );
 };
