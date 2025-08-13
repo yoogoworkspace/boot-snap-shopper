@@ -13,9 +13,9 @@ import { toast } from "sonner";
 interface WhatsAppAccount {
   id: string;
   phone_number: string;
-  account_name: string;
+  account_name: string | null;
   is_active: boolean;
-  last_used: string;
+  created_at: string;
 }
 
 export function WhatsAppManager() {
@@ -116,7 +116,7 @@ export function WhatsAppManager() {
       setEditingAccount(account);
       setFormData({
         phone_number: account.phone_number,
-        account_name: account.account_name,
+        account_name: account.account_name || "",
         is_active: account.is_active
       });
     } else {
@@ -137,7 +137,7 @@ export function WhatsAppManager() {
           <CardTitle>WhatsApp Account Management</CardTitle>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="btn-accent" onClick={() => openDialog()}>
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => openDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add WhatsApp Account
               </Button>
@@ -192,9 +192,9 @@ export function WhatsAppManager() {
       <CardContent>
         <div className="space-y-4">
           {accounts.map((account) => (
-            <div key={account.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+            <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-muted-foreground" />
+                <Phone className="h-5 w-5 text-gray-500" />
                 <div>
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">{account.phone_number}</span>
@@ -207,7 +207,7 @@ export function WhatsAppManager() {
                     </span>
                   </div>
                   {account.account_name && (
-                    <p className="text-sm text-muted-foreground">{account.account_name}</p>
+                    <p className="text-sm text-gray-500">{account.account_name}</p>
                   )}
                 </div>
               </div>
@@ -226,7 +226,7 @@ export function WhatsAppManager() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-destructive"
+                  className="text-red-600 hover:text-red-700"
                   onClick={() => handleDelete(account.id)}
                 >
                   <Trash2 className="h-3 w-3" />

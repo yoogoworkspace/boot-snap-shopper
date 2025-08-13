@@ -7,7 +7,6 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
   isAdmin: boolean;
@@ -21,12 +20,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const checkAdminStatus = async (userId: string) => {
+  const checkAdminStatus = async (email: string) => {
     try {
       const { data, error } = await supabase
         .from('admin_users')
         .select('id')
-        .eq('user_id', userId)
+        .eq('email', email)
         .single();
       
       if (error) {
@@ -49,10 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
+        if (session?.user?.email) {
           // Check if user is admin with a delay to avoid recursion
           setTimeout(() => {
-            checkAdminStatus(session.user.id);
+            checkAdminStatus(session.user.email!);
           }, 100);
         } else {
           setIsAdmin(false);
@@ -66,8 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminStatus(session.user.id);
+      if (session?.user?.email) {
+        checkAdminStatus(session.user.email);
       }
       setLoading(false);
     });
@@ -76,41 +75,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
-  };
-
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
-    });
-
-    // If signup is successful, add user to admin_users table
-    if (!error && data.user) {
-      const { error: adminError } = await supabase
+    // For demo purposes, check against our admin_users table
+    try {
+      const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
-        .insert([{
-          user_id: data.user.id,
-          email: email
-        }]);
-      
-      if (adminError) {
-        console.error('Error adding admin user:', adminError);
-      }
-    }
+        .select('*')
+        .eq('email', email)
+        .single();
 
-    return { error };
+      if (adminError || !adminUser) {
+        return { error: { message: 'Invalid email or password' } };
+      }
+
+      // For demo purposes, we'll use a simple password check
+      // In production, you'd want proper password hashing
+      if (password === 'admin123') {
+        // Create a mock session for admin login
+        setIsAdmin(true);
+        const mockUser = { id: adminUser.id, email: adminUser.email } as User;
+        setUser(mockUser);
+        return { error: null };
+      } else {
+        return { error: { message: 'Invalid email or password' } };
+      }
+    } catch (error) {
+      return { error };
+    }
   };
 
   const signOut = async () => {
+    setUser(null);
+    setSession(null);
+    setIsAdmin(false);
     await supabase.auth.signOut();
   };
 
@@ -119,7 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       signIn,
-      signUp,
       signOut,
       loading,
       isAdmin

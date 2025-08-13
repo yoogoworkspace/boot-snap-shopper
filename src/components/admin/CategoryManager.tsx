@@ -12,7 +12,7 @@ import { toast } from "sonner";
 interface Category {
   id: string;
   name: string;
-  description: string;
+  created_at: string;
 }
 
 export function CategoryManager() {
@@ -20,7 +20,7 @@ export function CategoryManager() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [formData, setFormData] = useState({ name: "" });
 
   useEffect(() => {
     fetchCategories();
@@ -65,7 +65,7 @@ export function CategoryManager() {
       
       setDialogOpen(false);
       setEditingCategory(null);
-      setFormData({ name: "", description: "" });
+      setFormData({ name: "" });
       fetchCategories();
     } catch (error: any) {
       toast.error(error.message || "Failed to save category");
@@ -92,10 +92,10 @@ export function CategoryManager() {
   const openDialog = (category?: Category) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({ name: category.name, description: category.description });
+      setFormData({ name: category.name });
     } else {
       setEditingCategory(null);
-      setFormData({ name: "", description: "" });
+      setFormData({ name: "" });
     }
     setDialogOpen(true);
   };
@@ -111,7 +111,7 @@ export function CategoryManager() {
           <CardTitle>Category Management</CardTitle>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="btn-accent" onClick={() => openDialog()}>
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => openDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Category
               </Button>
@@ -132,14 +132,6 @@ export function CategoryManager() {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  />
-                </div>
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Cancel
@@ -156,12 +148,9 @@ export function CategoryManager() {
       <CardContent>
         <div className="space-y-4">
           {categories.map((category) => (
-            <div key={category.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+            <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
               <div>
                 <span className="font-medium">{category.name}</span>
-                {category.description && (
-                  <p className="text-sm text-muted-foreground">{category.description}</p>
-                )}
               </div>
               <div className="flex space-x-2">
                 <Button
@@ -174,7 +163,7 @@ export function CategoryManager() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-destructive"
+                  className="text-red-600 hover:text-red-700"
                   onClick={() => handleDelete(category.id)}
                 >
                   <Trash2 className="h-3 w-3" />
