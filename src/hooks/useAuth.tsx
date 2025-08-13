@@ -20,78 +20,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    // Check if user is already logged in (from localStorage)
-    const adminUser = localStorage.getItem('adminUser');
-    if (adminUser) {
-      try {
-        const userData = JSON.parse(adminUser);
-        setUser(userData);
-        setIsAdmin(true);
-      } catch (error) {
-        localStorage.removeItem('adminUser');
+  const checkAdminStatus = async (email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('email', email)
+        .single();
+      
+      if (error) {
+        console.log('Admin check error:', error);
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(!!data);
       }
+    } catch (error) {
+      console.log('Admin check error:', error);
+      setIsAdmin(false);
     }
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user?.email) {
+          // Check if user is admin with a delay to avoid recursion
+          setTimeout(() => {
+            checkAdminStatus(session.user.email!);
+          }, 100);
+        } else {
+          setIsAdmin(false);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user?.email) {
+        checkAdminStatus(session.user.email);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    // For demo purposes, check against our admin_users table
     try {
-      console.log('Attempting to sign in with:', email);
-      
-      // Check against admin_users table
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('email', email)
         .single();
 
-      if (adminError) {
-        console.log('Admin user lookup error:', adminError);
+      if (adminError || !adminUser) {
         return { error: { message: 'Invalid email or password' } };
       }
 
-      if (!adminUser) {
-        console.log('No admin user found with email:', email);
-        return { error: { message: 'Invalid email or password' } };
-      }
-
-      console.log('Found admin user:', adminUser.email);
-
-      // Simple password check for demo (in production, use proper hashing)
+      // For demo purposes, we'll use a simple password check
+      // In production, you'd want proper password hashing
       if (password === 'admin123') {
-        console.log('Password correct, logging in');
-        
-        // Create mock user object
-        const mockUser = { 
-          id: adminUser.id, 
-          email: adminUser.email,
-          aud: 'authenticated',
-          role: 'authenticated',
-          email_confirmed_at: new Date().toISOString(),
-          phone: '',
-          confirmed_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-          app_metadata: {},
-          user_metadata: {},
-          identities: [],
-          created_at: adminUser.created_at,
-          updated_at: new Date().toISOString()
-        } as User;
-        
-        setUser(mockUser);
+        // Create a mock session for admin login
         setIsAdmin(true);
-        
-        // Store in localStorage for persistence
-        localStorage.setItem('adminUser', JSON.stringify(mockUser));
-        
+        const mockUser = { id: adminUser.id, email: adminUser.email } as User;
+        setUser(mockUser);
         return { error: null };
       } else {
-        console.log('Password incorrect');
         return { error: { message: 'Invalid email or password' } };
       }
     } catch (error) {
-      console.error('Sign in error:', error);
       return { error };
     }
   };
@@ -100,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
-    localStorage.removeItem('adminUser');
+    await supabase.auth.signOut();
   };
 
   return (
