@@ -61,19 +61,12 @@ const Cart = () => {
 
     setCartItems(updatedItems);
     localStorage.setItem('cartItems', JSON.stringify(updatedItems));
-    
-    // Dispatch custom event to update cart count
-    window.dispatchEvent(new Event('cartUpdated'));
   };
 
   const removeItem = (id: string) => {
     const updatedItems = cartItems.filter(item => item.id !== id);
     setCartItems(updatedItems);
     localStorage.setItem('cartItems', JSON.stringify(updatedItems));
-    
-    // Dispatch custom event to update cart count
-    window.dispatchEvent(new Event('cartUpdated'));
-    
     toast.success("Item removed from cart");
   };
 
@@ -109,6 +102,7 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
+      {/* Header */}
       <div className="bg-white shadow-sm border-b px-4 py-4">
         <div className="container mx-auto flex items-center">
           <Link to="/" className="mr-4">
@@ -123,6 +117,7 @@ const Cart = () => {
         </div>
       </div>
 
+      {/* Cart Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           {cartItems.length === 0 ? (
@@ -136,6 +131,7 @@ const Cart = () => {
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Cart Items */}
               {cartItems.map((item, index) => (
                 <Card
                   key={item.id}
@@ -190,6 +186,7 @@ const Cart = () => {
                 </Card>
               ))}
 
+              {/* Order Summary */}
               <Card className="shadow-xl bg-gradient-to-r from-blue-50 to-purple-50">
                 <CardContent className="p-8 text-center">
                   <div className="flex justify-between items-center mb-6">

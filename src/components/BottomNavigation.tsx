@@ -15,27 +15,23 @@ const BottomNavigation = ({ showAdmin = false }: BottomNavigationProps) => {
     return location.pathname === path;
   };
 
-  const updateCartCount = () => {
-    const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-    const totalItems = cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
-    setCartCount(totalItems);
-  };
-
   useEffect(() => {
+    const updateCartCount = () => {
+      const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      const totalItems = cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+      setCartCount(totalItems);
+    };
+
     updateCartCount();
     
     // Listen for storage changes (cart updates)
     window.addEventListener('storage', updateCartCount);
-    
-    // Listen for custom cart update events
-    window.addEventListener('cartUpdated', updateCartCount);
     
     // Also update on focus (when returning to the page)
     window.addEventListener('focus', updateCartCount);
     
     return () => {
       window.removeEventListener('storage', updateCartCount);
-      window.removeEventListener('cartUpdated', updateCartCount);
       window.removeEventListener('focus', updateCartCount);
     };
   }, []);
