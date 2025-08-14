@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAdminStatus = async (email: string) => {
     try {
+      console.log('Checking admin status for:', email);
       const { data, error } = await supabase
         .from('admin_users')
         .select('id')
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Admin check error:', error);
         setIsAdmin(false);
       } else {
+        console.log('Admin user found:', data);
         setIsAdmin(!!data);
       }
     } catch (error) {
@@ -89,20 +91,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: { message: 'Invalid email or password' } };
       }
 
-      // Direct password check without hashing
+      // Direct password check using the 'password' column from database
+      console.log('Checking password against database value');
       if (password === adminUser.password) {
         console.log('Password match, setting admin status');
         setIsAdmin(true);
+        
+        // Create a mock user object for admin
         const mockUser = { 
           id: adminUser.id, 
           email: adminUser.email,
           aud: 'authenticated',
-          role: 'authenticated'
+          role: 'authenticated',
+          email_confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          created_at: adminUser.created_at,
+          updated_at: new Date().toISOString()
         } as User;
+        
+        // Create a mock session
+        const mockSession = {
+          access_token: 'mock_admin_token',
+          refresh_token: 'mock_refresh_token',
+          expires_in: 3600,
+          token_type: 'bearer',
+          user: mockUser
+        } as Session;
+        
         setUser(mockUser);
+        setSession(mockSession);
         return { error: null };
       } else {
-        console.log('Password mismatch');
+        console.log('Password mismatch. Expected:', adminUser.password, 'Got:', password);
         return { error: { message: 'Invalid email or password' } };
       }
     } catch (error) {

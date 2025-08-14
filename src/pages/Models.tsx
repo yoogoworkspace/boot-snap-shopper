@@ -1,12 +1,12 @@
 
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, X, ZoomIn } from "lucide-react";
+import { ArrowLeft, Plus, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ImageZoomModal } from "@/components/ImageZoomModal";
 
 interface Model {
   id: string;
@@ -19,7 +19,11 @@ const Models = () => {
   const { category, size } = useParams();
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [zoomModal, setZoomModal] = useState<{ isOpen: boolean; imageUrl: string; alt: string }>({
+    isOpen: false,
+    imageUrl: '',
+    alt: ''
+  });
 
   useEffect(() => {
     fetchModels();
@@ -87,6 +91,14 @@ const Models = () => {
     toast.success(`${model.name} added to cart!`);
   };
 
+  const openZoomModal = (imageUrl: string, alt: string) => {
+    setZoomModal({ isOpen: true, imageUrl, alt });
+  };
+
+  const closeZoomModal = () => {
+    setZoomModal({ isOpen: false, imageUrl: '', alt: '' });
+  };
+
   const categoryName = category === 'football-boots' ? 'Football Boots' : 'Running & Formal Shoes';
 
   if (loading) {
@@ -130,11 +142,16 @@ const Models = () => {
                 <img
                   src={model.image_url || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop"}
                   alt={model.name}
-                  className="w-full h-64 object-cover cursor-pointer"
-                  onClick={() => setSelectedImage(model.image_url || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop")}
+                  className="w-full h-64 object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                  onClick={() => openZoomModal(
+                    model.image_url || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop",
+                    model.name
+                  )}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                  <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                  <div className="bg-white/90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
+                    <ZoomIn className="h-6 w-6 text-slate-800" />
+                  </div>
                 </div>
               </div>
               <CardContent className="p-6">
@@ -153,28 +170,13 @@ const Models = () => {
         </div>
       </div>
 
-      {/* Image Modal */}
-      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-        <DialogContent className="max-w-4xl p-0 bg-transparent border-none">
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-4 right-4 z-10 bg-black/50 text-white hover:bg-black/70"
-              onClick={() => setSelectedImage(null)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            {selectedImage && (
-              <img
-                src={selectedImage}
-                alt="Model"
-                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Zoom Modal */}
+      <ImageZoomModal
+        isOpen={zoomModal.isOpen}
+        onClose={closeZoomModal}
+        imageUrl={zoomModal.imageUrl}
+        alt={zoomModal.alt}
+      />
     </div>
   );
 };
