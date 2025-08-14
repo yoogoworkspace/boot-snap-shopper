@@ -1,9 +1,9 @@
-# netlify.toml
 [build]
   command = "npm run build"
-  publish = "dist" # or "build" depending on your framework (Lovable usually uses dist)
+  publish = "dist"
 
+# Only apply SPA fallback to non-asset routes
 [[redirects]]
-  from = "/*"
+  from = "/[^.]+"
   to = "/index.html"
   status = 200
