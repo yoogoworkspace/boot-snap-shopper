@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ export const ModelManager = () => {
     category_id: "", 
     size_id: "" 
   });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchModels();
@@ -55,6 +56,15 @@ export const ModelManager = () => {
   useEffect(() => {
     if (newModel.category_id) {
       const filtered = sizes.filter(size => size.category_id === newModel.category_id);
+      // Sort sizes numerically
+      filtered.sort((a, b) => {
+        const aNum = parseFloat(a.value);
+        const bNum = parseFloat(b.value);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return aNum - bNum;
+        }
+        return a.value.localeCompare(b.value);
+      });
       setFilteredSizes(filtered);
     }
   }, [newModel.category_id, sizes]);
@@ -96,13 +106,64 @@ export const ModelManager = () => {
     try {
       const { data, error } = await supabase
         .from('sizes')
-        .select('*')
-        .order('value');
+        .select('*');
 
       if (error) throw error;
-      setSizes(data || []);
+      
+      // Sort sizes numerically
+      const sortedSizes = (data || []).sort((a, b) => {
+        const aNum = parseFloat(a.value);
+        const bNum = parseFloat(b.value);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return aNum - bNum;
+        }
+        return a.value.localeCompare(b.value);
+      });
+      
+      setSizes(sortedSizes);
     } catch (error) {
       console.error('Error fetching sizes:', error);
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('model-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('model-images')
+        .getPublicUrl(fileName);
+
+      setNewModel({ ...newModel, image_url: publicUrl });
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -224,17 +285,40 @@ export const ModelManager = () => {
                   </Select>
                 </div>
                 <div className="col-span-2">
-                  <Label htmlFor="model-image">Image URL</Label>
-                  <Input
-                    id="model-image"
-                    value={newModel.image_url}
-                    onChange={(e) => setNewModel({ ...newModel, image_url: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <Label htmlFor="model-image">Model Image</Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      className="flex-1"
+                    />
+                    {uploading && (
+                      <div className="text-sm text-blue-600">Uploading...</div>
+                    )}
+                  </div>
+                  {newModel.image_url && (
+                    <div className="mt-2 relative inline-block">
+                      <img 
+                        src={newModel.image_url} 
+                        alt="Preview" 
+                        className="w-20 h-20 object-cover rounded border"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                        onClick={() => setNewModel({ ...newModel, image_url: "" })}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex space-x-2">
-                <Button onClick={handleAddModel} className="bg-green-600 hover:bg-green-700">
+                <Button onClick={handleAddModel} className="bg-green-600 hover:bg-green-700" disabled={uploading}>
                   Add Model
                 </Button>
                 <Button variant="outline" onClick={() => setIsAdding(false)}>

@@ -1,90 +1,95 @@
 
-import { Home, ShoppingCart, Settings } from "lucide-react";
+import { Home, ShoppingCart, Shield } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
 
-interface BottomNavigationProps {
-  showAdmin?: boolean;
-}
-
-const BottomNavigation = ({ showAdmin = false }: BottomNavigationProps) => {
+const BottomNavigation = () => {
   const location = useLocation();
+  const { isAdmin } = useAuth();
   const [cartCount, setCartCount] = useState(0);
-  
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
 
   useEffect(() => {
     const updateCartCount = () => {
       const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-      const totalItems = cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
-      setCartCount(totalItems);
+      const totalCount = cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+      setCartCount(totalCount);
     };
 
+    // Initial load
     updateCartCount();
-    
-    // Listen for storage changes (cart updates)
+
+    // Listen for storage changes (from other tabs)
     window.addEventListener('storage', updateCartCount);
-    
-    // Also update on focus (when returning to the page)
-    window.addEventListener('focus', updateCartCount);
-    
+
+    // Listen for custom cart update events
+    window.addEventListener('cartUpdated', updateCartCount);
+
     return () => {
       window.removeEventListener('storage', updateCartCount);
-      window.removeEventListener('focus', updateCartCount);
+      window.removeEventListener('cartUpdated', updateCartCount);
     };
   }, []);
 
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 shadow-lg">
-      <div className="flex justify-around items-center max-w-md mx-auto">
-        <Link
-          to="/"
-          className={`flex flex-col items-center space-y-1 p-3 rounded-xl transition-all duration-300 ${
-            isActive("/") 
-              ? "text-blue-600 bg-blue-50 transform scale-110" 
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Home className="h-6 w-6" />
-          <span className="text-xs font-medium">Home</span>
-        </Link>
-        
-        <Link
-          to="/cart"
-          className={`flex flex-col items-center space-y-1 p-3 rounded-xl transition-all duration-300 relative ${
-            isActive("/cart") 
-              ? "text-blue-600 bg-blue-50 transform scale-110" 
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <div className="relative">
-            <ShoppingCart className="h-6 w-6" />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </div>
-          <span className="text-xs font-medium">Cart</span>
-        </Link>
+  const isActive = (path: string) => location.pathname === path;
 
-        {showAdmin && (
-          <Link
-            to="/admin"
-            className={`flex flex-col items-center space-y-1 p-3 rounded-xl transition-all duration-300 ${
-              isActive("/admin") 
-                ? "text-blue-600 bg-blue-50 transform scale-110" 
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+      <div className="flex justify-around items-center max-w-md mx-auto">
+        <Link to="/">
+          <Button
+            variant={isActive("/") ? "default" : "ghost"}
+            size="sm"
+            className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+              isActive("/")
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <Settings className="h-6 w-6" />
-            <span className="text-xs font-medium">Admin</span>
+            <Home className="h-5 w-5" />
+            <span className="text-xs">Home</span>
+          </Button>
+        </Link>
+        
+        <Link to="/cart">
+          <Button
+            variant={isActive("/cart") ? "default" : "ghost"}
+            size="sm"
+            className={`flex flex-col items-center gap-1 h-auto py-2 px-3 relative ${
+              isActive("/cart")
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+            <span className="text-xs">Cart</span>
+          </Button>
+        </Link>
+
+        {isAdmin && (
+          <Link to="/admin">
+            <Button
+              variant={isActive("/admin") ? "default" : "ghost"}
+              size="sm"
+              className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+                isActive("/admin")
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Shield className="h-5 w-5" />
+              <span className="text-xs">Admin</span>
+            </Button>
           </Link>
         )}
       </div>
-    </nav>
+    </div>
   );
 };
 

@@ -61,16 +61,23 @@ const Cart = () => {
 
     setCartItems(updatedItems);
     localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+    
+    // Dispatch custom event to update cart count
+    window.dispatchEvent(new Event('cartUpdated'));
   };
 
   const removeItem = (id: string) => {
     const updatedItems = cartItems.filter(item => item.id !== id);
     setCartItems(updatedItems);
     localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+    
+    // Dispatch custom event to update cart count
+    window.dispatchEvent(new Event('cartUpdated'));
+    
     toast.success("Item removed from cart");
   };
 
-  const requestOrder = () => {
+  const requestOrder = async () => {
     if (cartItems.length === 0) {
       toast.error("Your cart is empty");
       return;
@@ -81,21 +88,59 @@ const Cart = () => {
       return;
     }
 
-    // Get a random WhatsApp account
-    const randomAccount = whatsappAccounts[Math.floor(Math.random() * whatsappAccounts.length)];
-    
-    const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const orderDetails = cartItems.map(item => 
-      `${item.name} - Size ${item.size} - Qty: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`
-    ).join('\n');
+    try {
+      // Create order in database
+      const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          total_amount: total,
+          status: 'pending'
+        }])
+        .select()
+        .single();
 
-    const message = `🛍️ New Order Request:\n\n${orderDetails}\n\n💰 Total: $${total.toFixed(2)}\n\nPlease confirm this order. Thank you!`;
-    const encodedMessage = encodeURIComponent(message);
-    
-    const whatsappUrl = `https://wa.me/${randomAccount.phone_number.replace('+', '')}?text=${encodedMessage}`;
-    
-    window.open(whatsappUrl, '_blank');
-    toast.success("Order sent via WhatsApp!");
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = cartItems.map(item => ({
+        order_id: order.id,
+        model_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        size_value: item.size
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Get a random WhatsApp account
+      const randomAccount = whatsappAccounts[Math.floor(Math.random() * whatsappAccounts.length)];
+      
+      // Create order URL
+      const orderUrl = `${window.location.origin}/order/${order.id}`;
+      
+      const message = `🛍️ New Order Request:\n\n📋 Order Details: ${orderUrl}\n\n💰 Total: $${total.toFixed(2)}\n\nPlease review the order details and confirm. Thank you!`;
+      const encodedMessage = encodeURIComponent(message);
+      
+      const whatsappUrl = `https://wa.me/${randomAccount.phone_number.replace('+', '')}?text=${encodedMessage}`;
+      
+      window.open(whatsappUrl, '_blank');
+      
+      // Clear cart after successful order
+      setCartItems([]);
+      localStorage.removeItem('cartItems');
+      window.dispatchEvent(new Event('cartUpdated'));
+      
+      toast.success("Order sent via WhatsApp!");
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error("Failed to create order");
+    }
   };
 
   const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);

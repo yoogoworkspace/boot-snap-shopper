@@ -3,16 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-
-interface Size {
-  id: string;
-  value: string;
-}
 
 const Sizes = () => {
   const { category } = useParams();
-  const [sizes, setSizes] = useState<Size[]>([]);
+  const [sizes, setSizes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,12 +29,24 @@ const Sizes = () => {
 
       const { data: sizesData, error: sizesError } = await supabase
         .from('sizes')
-        .select('*')
-        .eq('category_id', categoryData.id)
-        .order('value', { ascending: true });
+        .select('value')
+        .eq('category_id', categoryData.id);
 
       if (sizesError) throw sizesError;
-      setSizes(sizesData || []);
+      
+      // Sort sizes numerically
+      const sortedSizes = (sizesData || [])
+        .map(size => size.value)
+        .sort((a, b) => {
+          const aNum = parseFloat(a);
+          const bNum = parseFloat(b);
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            return aNum - bNum;
+          }
+          return a.localeCompare(b);
+        });
+      
+      setSizes(sortedSizes);
     } catch (error) {
       console.error('Error fetching sizes:', error);
     } finally {
@@ -67,29 +75,35 @@ const Sizes = () => {
               Back
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">
-            {categoryName}
-          </h1>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {categoryName}
+            </h1>
+            <p className="text-slate-600">Select your size</p>
+          </div>
         </div>
       </div>
 
-      {/* Sizes Grid */}
+      {/* Sizes */}
       <div className="container mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold text-center mb-12 text-slate-900">
-          Select Your Size
-        </h2>
-        
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 max-w-4xl mx-auto">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-4xl mx-auto">
           {sizes.map((size, index) => (
             <Link
-              key={size.id}
-              to={`/models/${category}/${size.value}`}
-              className="animate-scale-in"
-              style={{ animationDelay: `${index * 50}ms` }}
+              key={size}
+              to={`/models/${category}/${size}`}
+              className="block"
             >
-              <div className="bg-white rounded-xl p-6 text-center font-bold text-xl text-slate-700 hover:text-white hover:bg-gradient-to-br hover:from-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
-                {size.value}
-              </div>
+              <Card
+                className="text-center hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer animate-fade-in-up"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <CardContent className="p-6">
+                  <div className="text-2xl font-bold text-blue-600 mb-2">
+                    {size}
+                  </div>
+                  <div className="text-sm text-slate-600">Size</div>
+                </CardContent>
+              </Card>
             </Link>
           ))}
         </div>

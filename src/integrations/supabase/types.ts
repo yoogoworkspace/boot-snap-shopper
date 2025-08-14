@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -19,19 +19,19 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
-          password_hash: string
+          password: string
         }
         Insert: {
           created_at?: string | null
           email: string
           id?: string
-          password_hash: string
+          password: string
         }
         Update: {
           created_at?: string | null
           email?: string
           id?: string
-          password_hash?: string
+          password?: string
         }
         Relationships: []
       }
@@ -97,6 +97,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          model_id: string
+          order_id: string
+          price: number
+          quantity: number
+          size_value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          model_id: string
+          order_id: string
+          price: number
+          quantity: number
+          size_value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          model_id?: string
+          order_id?: string
+          price?: number
+          quantity?: number
+          size_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_info: Json | null
+          id: string
+          status: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          customer_info?: Json | null
+          id?: string
+          status?: string
+          total_amount: number
+        }
+        Update: {
+          created_at?: string
+          customer_info?: Json | null
+          id?: string
+          status?: string
+          total_amount?: number
+        }
+        Relationships: []
       }
       sizes: {
         Row: {

@@ -49,7 +49,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user?.email) {
-          // Check if user is admin with a delay to avoid recursion
           setTimeout(() => {
             checkAdminStatus(session.user.email!);
           }, 100);
@@ -61,7 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -75,30 +73,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    // For demo purposes, check against our admin_users table
     try {
+      console.log('Attempting to sign in with:', email);
+      
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('email', email)
         .single();
 
+      console.log('Admin user query result:', { adminUser, adminError });
+
       if (adminError || !adminUser) {
+        console.log('Admin user not found or error:', adminError);
         return { error: { message: 'Invalid email or password' } };
       }
 
-      // For demo purposes, we'll use a simple password check
-      // In production, you'd want proper password hashing
-      if (password === 'admin123') {
-        // Create a mock session for admin login
+      // Direct password check without hashing
+      if (password === adminUser.password) {
+        console.log('Password match, setting admin status');
         setIsAdmin(true);
-        const mockUser = { id: adminUser.id, email: adminUser.email } as User;
+        const mockUser = { 
+          id: adminUser.id, 
+          email: adminUser.email,
+          aud: 'authenticated',
+          role: 'authenticated'
+        } as User;
         setUser(mockUser);
         return { error: null };
       } else {
+        console.log('Password mismatch');
         return { error: { message: 'Invalid email or password' } };
       }
     } catch (error) {
+      console.error('Sign in error:', error);
       return { error };
     }
   };
