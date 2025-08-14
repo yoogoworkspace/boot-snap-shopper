@@ -3,6 +3,6 @@
   publish = "dist" # or "build" depending on your framework
 
 [[redirects]]
-  from = "/bootbucket/*"
-  to = "/bootbucket/index.html"
+  from = "/*"
+  to = "/index.html"
   status = 200
