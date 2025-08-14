@@ -2,8 +2,8 @@
   command = "npm run build"
   publish = "dist"
 
-# Only apply SPA fallback to non-asset routes
+# SPA fallback without catching asset files
 [[redirects]]
-  from = "/[^.]+"
+  from = "/"
   to = "/index.html"
   status = 200
