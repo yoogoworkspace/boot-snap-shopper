@@ -4,11 +4,13 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 
-// The base path should match vite.config.js `base`
-// This ensures routes like /bootbucket/page1 work
+// Dynamically set basename depending on where the app is served
+const pathName = window.location.pathname;
+const baseName = pathName.startsWith("/bootbucket") ? "/bootbucket" : "/";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter basename="/bootbucket">
+    <BrowserRouter basename={baseName}>
       <App />
     </BrowserRouter>
   </StrictMode>
