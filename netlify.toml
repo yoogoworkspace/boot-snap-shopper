@@ -1,9 +1,8 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  publish = "dist" # or "build" depending on your framework
 
-# SPA fallback without catching asset files
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/bootbucket/*"
+  to = "/bootbucket/index.html"
   status = 200
