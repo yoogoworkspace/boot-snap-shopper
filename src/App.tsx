@@ -22,7 +22,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/bootbucket">
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
@@ -35,6 +35,7 @@ const App = () => (
             </Routes>
           </Layout>
         </BrowserRouter>
+
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
