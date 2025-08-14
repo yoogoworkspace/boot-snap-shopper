@@ -4,6 +4,6 @@
 
 # SPA fallback without catching asset files
 [[redirects]]
-  from = "/"
+  from = "/*"
   to = "/index.html"
   status = 200
