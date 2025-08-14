@@ -122,9 +122,9 @@ const Cart = () => {
       const randomAccount = whatsappAccounts[Math.floor(Math.random() * whatsappAccounts.length)];
       
       // Create order URL
-      const orderUrl = `${window.location.origin}/order/${order.id}`;
+      const orderUrl = `${window.location.origin}/bootbucket/order/${order.id}`;
       
-      const message = `🛍️ New Order Request:\n\n📋 Order Details: ${orderUrl}\n\n💰 Total: $${total.toFixed(2)}\n\nPlease review the order details and confirm. Thank you!`;
+      const message = `🛍️ New Order Request:\n\n📋 Order Details:\n${orderUrl}\n\n💰 Total*: ₹${total.toFixed(2)}\n<i>*Delivery charge extra except for pickup.</i>\n\nPlease review the order details and confirm. Thank you!`;
       const encodedMessage = encodeURIComponent(message);
       
       const whatsappUrl = `https://wa.me/${randomAccount.phone_number.replace('+', '')}?text=${encodedMessage}`;
@@ -194,7 +194,7 @@ const Cart = () => {
                       <div className="flex-1">
                         <h3 className="font-bold text-slate-900 text-lg">{item.name}</h3>
                         <p className="text-slate-600">Size: {item.size}</p>
-                        <p className="text-xl font-bold text-blue-600">${item.price}</p>
+                        <p className="text-xl font-bold text-blue-600">₹{item.price}</p>
                       </div>
                       
                       <div className="flex items-center space-x-3">
@@ -236,7 +236,7 @@ const Cart = () => {
                 <CardContent className="p-8 text-center">
                   <div className="flex justify-between items-center mb-6">
                     <span className="text-2xl font-bold text-slate-900">Total:</span>
-                    <span className="text-3xl font-bold text-blue-600">${total.toFixed(2)}</span>
+                    <span className="text-3xl font-bold text-blue-600">₹{total.toFixed(2)}</span>
                   </div>
                   
                   <Button

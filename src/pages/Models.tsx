@@ -139,7 +139,7 @@ const Models = () => {
               </div>
               <CardContent className="p-6">
                 <h3 className="text-xl font-bold text-slate-900 mb-2">{model.name}</h3>
-                <p className="text-2xl font-bold text-blue-600 mb-4">${model.price}</p>
+                <p className="text-2xl font-bold text-blue-600 mb-4">₹{model.price}</p>
                 <Button
                   onClick={() => addToCart(model)}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105"

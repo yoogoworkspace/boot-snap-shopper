@@ -158,7 +158,7 @@ const Order = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-900 mb-2">Total Amount</h3>
-                  <p className="text-3xl font-bold text-blue-600">${order.total_amount}</p>
+                  <p className="text-3xl font-bold text-blue-600">₹{order.total_amount}</p>
                 </div>
               </div>
             </CardContent>
@@ -187,9 +187,9 @@ const Order = () => {
                       <p className="text-slate-600">Quantity: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-blue-600">${item.price}</p>
+                      <p className="font-bold text-blue-600">₹{item.price}</p>
                       <p className="text-sm text-slate-600">
-                        Total: ${(item.price * item.quantity).toFixed(2)}
+                        Total: ₹{(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
