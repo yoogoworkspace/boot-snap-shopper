@@ -72,12 +72,12 @@ const Admin = () => {
           <CardContent>
             <form onSubmit={handleSignIn} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700 font-medium">Email</Label>
+                <Label htmlFor="username" className="text-slate-700 font-medium">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@bootbucket.com"
-                  value={email}
+                  id="username"
+                  type="text" // changed from email to text
+                  placeholder="Enter your username"
+                  value={email} // still using email state variable to avoid changing auth logic
                   onChange={(e) => setEmail(e.target.value)}
                   className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                   required

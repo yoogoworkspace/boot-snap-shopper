@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import NativeAd from "../NativeAd";
 
 const Home = () => {
   const categories = [
@@ -9,7 +10,7 @@ const Home = () => {
       id: "football-boots",
       name: "Football Boots",
       gradient: "from-blue-600 to-purple-600",
-      image: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5d?w=500&h=300&fit=crop"
+      image: "https://www.soccerbible.com/media/138945/lucent-sb-1.jpg"
     },
     {
       id: "running-formal-shoes", 
@@ -58,6 +59,7 @@ const Home = () => {
           ))}
         </div>
       </div>
+      <NativeAd />
     </div>
   );
 };
