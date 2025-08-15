@@ -35,62 +35,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('Attempting to sign in with:', email);
       
-      // First, try to sign in with Supabase Auth using email/password
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      // Query admin_users table directly without RLS restrictions
+      const { data: adminUser, error: adminError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle();
 
-      if (authError) {
-        console.log('Supabase auth failed, trying admin_users table:', authError);
-        
-        // Fallback to admin_users table if Supabase auth fails
-        const { data: adminUser, error: adminError } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('email', email)
-          .single();
+      console.log('Admin user query result:', { adminUser, adminError });
 
-        console.log('Admin user query result:', { adminUser, adminError });
+      if (adminError) {
+        console.log('Database error:', adminError);
+        return { error: { message: 'Database connection error' } };
+      }
 
-        if (adminError || !adminUser) {
-          console.log('Admin user not found or error:', adminError);
-          return { error: { message: 'Invalid email or password' } };
-        }
+      if (!adminUser) {
+        console.log('Admin user not found');
+        return { error: { message: 'Invalid email or password' } };
+      }
 
-        // Direct password check for admin_users table
-        if (password === adminUser.password) {
-          console.log('Password match, setting admin status');
-          setIsAdmin(true);
-          
-          const userData = { 
-            id: adminUser.id, 
-            email: adminUser.email,
-            created_at: adminUser.created_at
-          };
-          
-          setUser(userData);
-          setSession({ user: userData });
-          
-          // Store in localStorage for persistence
-          localStorage.setItem('adminUser', JSON.stringify(userData));
-          
-          return { error: null };
-        } else {
-          console.log('Password mismatch');
-          return { error: { message: 'Invalid email or password' } };
-        }
-      } else {
-        // Supabase auth succeeded
-        console.log('Supabase auth successful:', authData);
+      // Direct password check
+      if (password === adminUser.password) {
+        console.log('Password match, setting admin status');
         setIsAdmin(true);
-        setUser(authData.user);
-        setSession(authData.session);
+        
+        const userData = { 
+          id: adminUser.id, 
+          email: adminUser.email,
+          created_at: adminUser.created_at
+        };
+        
+        setUser(userData);
+        setSession({ user: userData });
         
         // Store in localStorage for persistence
-        localStorage.setItem('adminUser', JSON.stringify(authData.user));
+        localStorage.setItem('adminUser', JSON.stringify(userData));
         
         return { error: null };
+      } else {
+        console.log('Password mismatch');
+        return { error: { message: 'Invalid email or password' } };
       }
     } catch (error) {
       console.error('Sign in error:', error);
@@ -99,11 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    // Sign out from Supabase Auth if session exists
-    if (session) {
-      await supabase.auth.signOut();
-    }
-    
     setUser(null);
     setSession(null);
     setIsAdmin(false);

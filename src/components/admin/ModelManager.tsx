@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -147,6 +146,7 @@ export const ModelManager = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
+      // Upload without RLS restrictions since storage bucket is public
       const { error: uploadError } = await supabase.storage
         .from('model-images')
         .upload(fileName, file);
