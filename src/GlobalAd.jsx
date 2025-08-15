@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 export default function Ad() {
   useEffect(() => {
-    // Define the atOptions object globally so the ad script can access it
+    // Ad settings
     window.atOptions = {
       key: "f2a67666eb0d88a27db84396457aaa9a",
       format: "iframe",
@@ -11,7 +11,7 @@ export default function Ad() {
       params: {},
     };
 
-    // Create and append the ad script
+    // Load ad script
     const script = document.createElement("script");
     script.type = "text/javascript";
     script.src = "//www.highperformanceformat.com/f2a67666eb0d88a27db84396457aaa9a/invoke.js";
@@ -19,18 +19,26 @@ export default function Ad() {
 
     const container = document.getElementById("ad-container");
     if (container) {
-      container.innerHTML = ""; // Clear old ad if it re-renders
+      container.innerHTML = "";
       container.appendChild(script);
     }
   }, []);
 
   return (
     <div
-      id="ad-container"
       style={{
-        textAlign: "center",
+        display: "flex",
+        justifyContent: "center",
         margin: "20px auto",
       }}
-    ></div>
+    >
+      <div
+        id="ad-container"
+        style={{
+          maxWidth: "100%",
+          overflow: "hidden",
+        }}
+      ></div>
+    </div>
   );
 }
