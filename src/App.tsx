@@ -13,6 +13,7 @@ import Cart from "./pages/Cart";
 import Admin from "./pages/Admin";
 import Order from "./pages/Order";
 import NotFound from "./pages/NotFound";
+import GlobalAd from "./GlobalAd";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter basename="/bootbucket">
           <Layout>
+            <GlobalAd />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/sizes/:category" element={<Sizes />} />
@@ -33,6 +35,7 @@ const App = () => (
               <Route path="/order/:orderId" element={<Order />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <GlobalAd />
           </Layout>
         </BrowserRouter>
       </TooltipProvider>
