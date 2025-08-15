@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { getAuthenticatedSupabase } from "@/lib/supabaseAuth";
 import { toast } from "sonner";
 
 interface Category {
@@ -28,6 +27,7 @@ export function CategoryManager() {
 
   const fetchCategories = async () => {
     try {
+      const supabase = getAuthenticatedSupabase();
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -46,6 +46,8 @@ export function CategoryManager() {
     e.preventDefault();
     
     try {
+      const supabase = getAuthenticatedSupabase();
+      
       if (editingCategory) {
         const { error } = await supabase
           .from('categories')
@@ -76,6 +78,7 @@ export function CategoryManager() {
     if (!confirm("Are you sure you want to delete this category?")) return;
     
     try {
+      const supabase = getAuthenticatedSupabase();
       const { error } = await supabase
         .from('categories')
         .delete()

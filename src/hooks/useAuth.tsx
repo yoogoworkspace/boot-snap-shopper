@@ -1,11 +1,10 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: any | null;
+  session: any | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -15,64 +14,36 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<any | null>(null);
+  const [session, setSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const checkAdminStatus = async (email: string) => {
-    try {
-      console.log('Checking admin status for:', email);
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('id')
-        .eq('email', email)
-        .single();
-      
-      if (error) {
-        console.log('Admin check error:', error);
-        setIsAdmin(false);
-      } else {
-        console.log('Admin user found:', data);
-        setIsAdmin(!!data);
-      }
-    } catch (error) {
-      console.log('Admin check error:', error);
-      setIsAdmin(false);
-    }
-  };
-
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user?.email) {
-          setTimeout(() => {
-            checkAdminStatus(session.user.email!);
-          }, 100);
-        } else {
-          setIsAdmin(false);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.email) {
-        checkAdminStatus(session.user.email);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    // Check if user is already logged in from localStorage
+    const storedUser = localStorage.getItem('adminUser');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      setIsAdmin(true);
+      setSession({ user: userData });
+      
+      // Set up Supabase client with admin context
+      setupSupabaseAuth(userData);
+    }
+    setLoading(false);
   }, []);
+
+  const setupSupabaseAuth = (userData: any) => {
+    // Set custom headers to identify as authenticated admin
+    supabase.rest.headers['x-admin-user'] = userData.email;
+    supabase.rest.headers['x-admin-id'] = userData.id;
+    
+    // You can also use RPC calls to set session variables if needed
+    supabase.rpc('set_admin_context', { admin_email: userData.email }).catch(() => {
+      // Fallback - just continue without RPC if function doesn't exist
+    });
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -91,38 +62,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: { message: 'Invalid email or password' } };
       }
 
-      // Direct password check using the 'password' column from database
-      console.log('Checking password against database value');
+      // Direct password check
       if (password === adminUser.password) {
         console.log('Password match, setting admin status');
         setIsAdmin(true);
         
-        // Create a mock user object for admin
-        const mockUser = { 
+        const userData = { 
           id: adminUser.id, 
           email: adminUser.email,
-          aud: 'authenticated',
-          role: 'authenticated',
-          email_confirmed_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-          created_at: adminUser.created_at,
-          updated_at: new Date().toISOString()
-        } as User;
+          created_at: adminUser.created_at
+        };
         
-        // Create a mock session
-        const mockSession = {
-          access_token: 'mock_admin_token',
-          refresh_token: 'mock_refresh_token',
-          expires_in: 3600,
-          token_type: 'bearer',
-          user: mockUser
-        } as Session;
+        setUser(userData);
+        setSession({ user: userData });
         
-        setUser(mockUser);
-        setSession(mockSession);
+        // Store in localStorage for persistence
+        localStorage.setItem('adminUser', JSON.stringify(userData));
+        
+        // Set up Supabase client with admin context
+        setupSupabaseAuth(userData);
+        
         return { error: null };
       } else {
-        console.log('Password mismatch. Expected:', adminUser.password, 'Got:', password);
+        console.log('Password mismatch');
         return { error: { message: 'Invalid email or password' } };
       }
     } catch (error) {
@@ -135,7 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
-    await supabase.auth.signOut();
+    localStorage.removeItem('adminUser');
+    
+    // Clear custom headers
+    delete supabase.rest.headers['x-admin-user'];
+    delete supabase.rest.headers['x-admin-id'];
   };
 
   return (
