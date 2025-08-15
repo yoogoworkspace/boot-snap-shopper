@@ -149,11 +149,11 @@ const Models = () => {
                   onClick={() => openZoomModal(model.image_url, model.name)}
                   className="cursor-pointer"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                  <div className="bg-white/90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
-                    <ZoomIn className="h-6 w-6 text-slate-800" />
-                  </div>
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center pointer-events-none">
+                <div className="bg-white/90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75">
+                  <ZoomIn className="h-6 w-6 text-slate-800" />
                 </div>
+              </div>
               </div>
               <CardContent className="p-6">
                 <h3 className="text-xl font-bold text-slate-900 mb-2">{model.name}</h3>
