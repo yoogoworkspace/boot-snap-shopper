@@ -10,7 +10,7 @@ const Home = () => {
       id: "football-boots",
       name: "Football Boots",
       gradient: "from-blue-600 to-purple-600",
-      image: "https://www.soccerbible.com/media/138945/lucent-sb-1.jpg"
+      image: "https://blobsoccerbibleprod.blob.core.windows.net/media/138958/lucent-sb-tab.jpg"
     },
     {
       id: "running-formal-shoes", 
