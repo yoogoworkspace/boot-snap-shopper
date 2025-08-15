@@ -25,38 +25,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Checking admin status for:', email);
       const { data, error } = await supabase
         .from('admin_users')
-        .select('id, email, password')
+        .select('id')
         .eq('email', email)
         .single();
       
       if (error) {
         console.log('Admin check error:', error);
         setIsAdmin(false);
-        return null;
       } else {
         console.log('Admin user found:', data);
         setIsAdmin(!!data);
-        return data;
       }
     } catch (error) {
       console.log('Admin check error:', error);
       setIsAdmin(false);
-      return null;
     }
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.email) {
-        checkAdminStatus(session.user.email);
-      }
-      setLoading(false);
-    });
-
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -65,7 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user?.email) {
-          checkAdminStatus(session.user.email);
+          setTimeout(() => {
+            checkAdminStatus(session.user.email!);
+          }, 100);
         } else {
           setIsAdmin(false);
         }
@@ -74,6 +62,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user?.email) {
+        checkAdminStatus(session.user.email);
+      }
+      setLoading(false);
+    });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -81,48 +78,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('Attempting to sign in with:', email);
       
-      // First check if the user exists in admin_users table
-      const adminUser = await checkAdminStatus(email);
-      
-      if (!adminUser) {
-        console.log('Admin user not found');
+      const { data: adminUser, error: adminError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      console.log('Admin user query result:', { adminUser, adminError });
+
+      if (adminError || !adminUser) {
+        console.log('Admin user not found or error:', adminError);
         return { error: { message: 'Invalid email or password' } };
       }
 
-      // Check password
-      if (password !== adminUser.password) {
-        console.log('Password mismatch');
+      // Direct password check using the 'password' column from database
+      console.log('Checking password against database value');
+      if (password === adminUser.password) {
+        console.log('Password match, setting admin status');
+        setIsAdmin(true);
+        
+        // Create a mock user object for admin
+        const mockUser = { 
+          id: adminUser.id, 
+          email: adminUser.email,
+          aud: 'authenticated',
+          role: 'authenticated',
+          email_confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          created_at: adminUser.created_at,
+          updated_at: new Date().toISOString()
+        } as User;
+        
+        // Create a mock session
+        const mockSession = {
+          access_token: 'mock_admin_token',
+          refresh_token: 'mock_refresh_token',
+          expires_in: 3600,
+          token_type: 'bearer',
+          user: mockUser
+        } as Session;
+        
+        setUser(mockUser);
+        setSession(mockSession);
+        return { error: null };
+      } else {
+        console.log('Password mismatch. Expected:', adminUser.password, 'Got:', password);
         return { error: { message: 'Invalid email or password' } };
       }
-
-      console.log('Password match, attempting Supabase auth');
-      
-      // Try to sign up the user in Supabase auth if they don't exist
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-      });
-
-      if (signUpError && !signUpError.message.includes('already registered')) {
-        console.log('Sign up error:', signUpError);
-        return { error: signUpError };
-      }
-
-      // Now sign in
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-
-      if (signInError) {
-        console.log('Sign in error:', signInError);
-        return { error: signInError };
-      }
-
-      console.log('Successfully signed in:', signInData);
-      setIsAdmin(true);
-      return { error: null };
-      
     } catch (error) {
       console.error('Sign in error:', error);
       return { error };
@@ -130,10 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    await supabase.auth.signOut();
   };
 
   return (
