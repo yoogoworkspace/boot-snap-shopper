@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -17,13 +17,23 @@ export const ImageZoomModal = ({ isOpen, onClose, imageUrl, alt }: ImageZoomModa
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  // Reset zoom and position when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setZoom(1);
+      setPosition({ x: 0, y: 0 });
+      setIsDragging(false);
+    }
+  }, [isOpen]);
+
   const handleZoomIn = () => {
     setZoom(prev => Math.min(prev + 0.5, 3));
   };
 
   const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 0.5, 0.5));
-    if (zoom <= 1) {
+    const newZoom = Math.max(zoom - 0.5, 0.5);
+    setZoom(newZoom);
+    if (newZoom <= 1) {
       setPosition({ x: 0, y: 0 });
     }
   };
@@ -51,15 +61,25 @@ export const ImageZoomModal = ({ isOpen, onClose, imageUrl, alt }: ImageZoomModa
     setIsDragging(false);
   };
 
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
   const resetZoom = () => {
     setZoom(1);
     setPosition({ x: 0, y: 0 });
   };
 
+  const handleImageClick = () => {
+    if (zoom === 1) {
+      handleZoomIn();
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-full flex items-center justify-center min-h-[400px]">
           {/* Controls */}
           <div className="absolute top-4 right-4 z-50 flex space-x-2">
             <Button
@@ -105,24 +125,26 @@ export const ImageZoomModal = ({ isOpen, onClose, imageUrl, alt }: ImageZoomModa
             </div>
           </div>
 
-          {/* Image */}
-          <div className="w-full h-full flex items-center justify-center overflow-hidden">
+          {/* Image container */}
+          <div 
+            className="w-full h-full flex items-center justify-center overflow-hidden cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+          >
             <img
               src={imageUrl}
               alt={alt}
-              className={`max-w-none transition-transform duration-200 ${
-                zoom > 1 ? 'cursor-grab' : 'cursor-zoom-in'
-              } ${isDragging ? 'cursor-grabbing' : ''}`}
+              className={`max-w-none transition-transform duration-200 select-none ${
+                zoom > 1 && isDragging ? 'cursor-grabbing' : zoom > 1 ? 'cursor-grab' : 'cursor-zoom-in'
+              }`}
               style={{
                 transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
                 maxHeight: zoom === 1 ? '90vh' : 'none',
                 maxWidth: zoom === 1 ? '90vw' : 'none'
               }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onClick={zoom === 1 ? handleZoomIn : undefined}
+              onClick={handleImageClick}
               draggable={false}
             />
           </div>
