@@ -15,6 +15,7 @@ interface Model {
   image_url: string;
   category_id: string;
   size_id: string;
+  is_hidden: boolean;
   category?: { name: string };
   size?: { value: string };
 }
@@ -193,26 +194,23 @@ export const ModelManager = () => {
     }
   };
 
-  const handleDeleteModel = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this model?")) {
-      return;
-    }
-
+  const handleToggleHideModel = async (id: string, currentHidden: boolean) => {
     try {
       const { error } = await supabase
         .from('models')
-        .delete()
+        .update({ is_hidden: !currentHidden })
         .eq('id', id);
 
       if (error) throw error;
-      
-      toast.success("Model deleted successfully");
+
+      toast.success(!currentHidden ? "Model hidden" : "Model is visible again");
       fetchModels();
     } catch (error) {
-      console.error('Error deleting model:', error);
-      toast.error("Failed to delete model");
+      console.error('Error updating model visibility:', error);
+      toast.error("Failed to update visibility");
     }
   };
+
 
   return (
     <Card className="shadow-lg">
@@ -343,21 +341,32 @@ export const ModelManager = () => {
                       />
                     )}
                     <div>
-                      <h3 className="font-semibold text-lg">{model.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{model.name}</h3>
+                        
+                        {model.is_hidden && (
+                          <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                            Hidden
+                          </span>
+                        )}
+                      </div>
                       <p className="text-blue-600 font-bold">₹{model.price}</p>
                       <p className="text-sm text-slate-600">
                         {model.category?.name} - Size {model.size?.value}
                       </p>
                     </div>
                   </div>
+                  
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteModel(model.id)}
-                      className="text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => handleToggleHideModel(model.id, model.is_hidden)}
+                      className={model.is_hidden
+                        ? "text-green-600 border-green-200 hover:bg-green-50"
+                        : "text-yellow-600 border-yellow-200 hover:bg-yellow-50"}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {model.is_hidden ? "Unhide" : "Hide"}
                     </Button>
                   </div>
                 </div>

@@ -13,6 +13,7 @@ interface Model {
   name: string;
   price: number;
   image_url: string;
+  is_hidden: boolean;
 }
 
 const Models = () => {
@@ -54,7 +55,9 @@ const Models = () => {
         .from('models')
         .select('*')
         .eq('category_id', categoryData.id)
-        .eq('size_id', sizeData.id);
+        .eq('size_id', sizeData.id)
+        .eq('is_hidden', false);
+
 
       if (modelsError) throw modelsError;
       setModels(modelsData || []);
