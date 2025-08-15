@@ -27,65 +27,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       setIsAdmin(true);
       setSession({ user: userData });
-      
-      // Set up Supabase client with admin context
-      setupSupabaseAuth(userData);
     }
     setLoading(false);
   }, []);
-
-  const setupSupabaseAuth = (userData: any) => {
-    // Set custom headers to identify as authenticated admin
-    supabase.rest.headers['x-admin-user'] = userData.email;
-    supabase.rest.headers['x-admin-id'] = userData.id;
-    
-    // You can also use RPC calls to set session variables if needed
-    supabase.rpc('set_admin_context', { admin_email: userData.email }).catch(() => {
-      // Fallback - just continue without RPC if function doesn't exist
-    });
-  };
 
   const signIn = async (email: string, password: string) => {
     try {
       console.log('Attempting to sign in with:', email);
       
-      const { data: adminUser, error: adminError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .single();
+      // First, try to sign in with Supabase Auth using email/password
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
 
-      console.log('Admin user query result:', { adminUser, adminError });
+      if (authError) {
+        console.log('Supabase auth failed, trying admin_users table:', authError);
+        
+        // Fallback to admin_users table if Supabase auth fails
+        const { data: adminUser, error: adminError } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('email', email)
+          .single();
 
-      if (adminError || !adminUser) {
-        console.log('Admin user not found or error:', adminError);
-        return { error: { message: 'Invalid email or password' } };
-      }
+        console.log('Admin user query result:', { adminUser, adminError });
 
-      // Direct password check
-      if (password === adminUser.password) {
-        console.log('Password match, setting admin status');
+        if (adminError || !adminUser) {
+          console.log('Admin user not found or error:', adminError);
+          return { error: { message: 'Invalid email or password' } };
+        }
+
+        // Direct password check for admin_users table
+        if (password === adminUser.password) {
+          console.log('Password match, setting admin status');
+          setIsAdmin(true);
+          
+          const userData = { 
+            id: adminUser.id, 
+            email: adminUser.email,
+            created_at: adminUser.created_at
+          };
+          
+          setUser(userData);
+          setSession({ user: userData });
+          
+          // Store in localStorage for persistence
+          localStorage.setItem('adminUser', JSON.stringify(userData));
+          
+          return { error: null };
+        } else {
+          console.log('Password mismatch');
+          return { error: { message: 'Invalid email or password' } };
+        }
+      } else {
+        // Supabase auth succeeded
+        console.log('Supabase auth successful:', authData);
         setIsAdmin(true);
-        
-        const userData = { 
-          id: adminUser.id, 
-          email: adminUser.email,
-          created_at: adminUser.created_at
-        };
-        
-        setUser(userData);
-        setSession({ user: userData });
+        setUser(authData.user);
+        setSession(authData.session);
         
         // Store in localStorage for persistence
-        localStorage.setItem('adminUser', JSON.stringify(userData));
-        
-        // Set up Supabase client with admin context
-        setupSupabaseAuth(userData);
+        localStorage.setItem('adminUser', JSON.stringify(authData.user));
         
         return { error: null };
-      } else {
-        console.log('Password mismatch');
-        return { error: { message: 'Invalid email or password' } };
       }
     } catch (error) {
       console.error('Sign in error:', error);
@@ -94,14 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Sign out from Supabase Auth if session exists
+    if (session) {
+      await supabase.auth.signOut();
+    }
+    
     setUser(null);
     setSession(null);
     setIsAdmin(false);
     localStorage.removeItem('adminUser');
-    
-    // Clear custom headers
-    delete supabase.rest.headers['x-admin-user'];
-    delete supabase.rest.headers['x-admin-id'];
   };
 
   return (
