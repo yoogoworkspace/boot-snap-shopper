@@ -344,7 +344,7 @@ export const ModelManager = () => {
                     )}
                     <div>
                       <h3 className="font-semibold text-lg">{model.name}</h3>
-                      <p className="text-blue-600 font-bold">${model.price}</p>
+                      <p className="text-blue-600 font-bold">₹{model.price}</p>
                       <p className="text-sm text-slate-600">
                         {model.category?.name} - Size {model.size?.value}
                       </p>
