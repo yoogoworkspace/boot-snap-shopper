@@ -1,8 +1,7 @@
 
-import { useState } from "react";
-import { X, ZoomIn, ZoomOut } from "lucide-react";
+import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useState, useRef, useEffect } from "react";
 
 interface ImageZoomModalProps {
   isOpen: boolean;
@@ -11,35 +10,50 @@ interface ImageZoomModalProps {
   alt: string;
 }
 
-export const ImageZoomModal = ({ isOpen, onClose, imageUrl, alt }: ImageZoomModalProps) => {
-  const [zoom, setZoom] = useState(1);
+export function ImageZoomModal({ isOpen, onClose, imageUrl, alt }: ImageZoomModalProps) {
+  const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Reset zoom and position when modal opens
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 0.5, 3));
+    setScale(prev => Math.min(prev * 1.2, 5));
   };
 
   const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 0.5, 0.5));
-    if (zoom <= 1) {
-      setPosition({ x: 0, y: 0 });
-    }
+    setScale(prev => Math.max(prev / 1.2, 0.5));
+  };
+
+  const handleReset = () => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (zoom > 1) {
+    if (scale > 1) {
       setIsDragging(true);
-      setDragStart({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y
-      });
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging && zoom > 1) {
+    if (isDragging && scale > 1) {
       setPosition({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
@@ -51,83 +65,89 @@ export const ImageZoomModal = ({ isOpen, onClose, imageUrl, alt }: ImageZoomModa
     setIsDragging(false);
   };
 
-  const resetZoom = () => {
-    setZoom(1);
-    setPosition({ x: 0, y: 0 });
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY * -0.01;
+    const newScale = Math.min(Math.max(scale + delta, 0.5), 5);
+    setScale(newScale);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
-        <div className="relative w-full h-full flex items-center justify-center">
-          {/* Controls */}
-          <div className="absolute top-4 right-4 z-50 flex space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="bg-black/50 text-white hover:bg-black/70"
-              onClick={handleZoomOut}
-              disabled={zoom <= 0.5}
-            >
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="bg-black/50 text-white hover:bg-black/70"
-              onClick={handleZoomIn}
-              disabled={zoom >= 3}
-            >
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="bg-black/50 text-white hover:bg-black/70"
-              onClick={resetZoom}
-            >
-              Reset
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="bg-black/50 text-white hover:bg-black/70"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+      {/* Controls */}
+      <div className="absolute top-4 right-4 flex gap-2 z-10">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleZoomIn}
+          className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleZoomOut}
+          className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleReset}
+          className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onClose}
+          className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
-          {/* Zoom level indicator */}
-          <div className="absolute top-4 left-4 z-50">
-            <div className="bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-              {Math.round(zoom * 100)}%
-            </div>
-          </div>
+      {/* Image Container */}
+      <div 
+        className="w-full h-full flex items-center justify-center overflow-hidden cursor-move"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
+      >
+        <img
+          ref={imageRef}
+          src={imageUrl}
+          alt={alt}
+          className="max-w-none max-h-none transition-transform duration-200 select-none"
+          style={{
+            transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+            cursor: scale > 1 ? 'move' : 'default'
+          }}
+          draggable={false}
+        />
+      </div>
 
-          {/* Image */}
-          <div className="w-full h-full flex items-center justify-center overflow-hidden">
-            <img
-              src={imageUrl}
-              alt={alt}
-              className={`max-w-none transition-transform duration-200 ${
-                zoom > 1 ? 'cursor-grab' : 'cursor-zoom-in'
-              } ${isDragging ? 'cursor-grabbing' : ''}`}
-              style={{
-                transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
-                maxHeight: zoom === 1 ? '90vh' : 'none',
-                maxWidth: zoom === 1 ? '90vw' : 'none'
-              }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onClick={zoom === 1 ? handleZoomIn : undefined}
-              draggable={false}
-            />
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+      {/* Instructions */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/70 text-sm">
+        Use mouse wheel to zoom • Click and drag to pan • ESC to close
+      </div>
+
+      {/* ESC Key Handler */}
+      <div
+        className="fixed inset-0"
+        onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onClose();
+        }}
+        tabIndex={0}
+      />
+    </div>
   );
-};
+}

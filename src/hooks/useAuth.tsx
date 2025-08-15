@@ -62,7 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user?.email) {
@@ -78,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('Attempting to sign in with:', email);
       
+      // First check if this is an admin user in our admin_users table
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
@@ -91,40 +94,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: { message: 'Invalid email or password' } };
       }
 
-      // Direct password check using the 'password' column from database
-      console.log('Checking password against database value');
-      if (password === adminUser.password) {
-        console.log('Password match, setting admin status');
-        setIsAdmin(true);
-        
-        // Create a mock user object for admin
-        const mockUser = { 
-          id: adminUser.id, 
-          email: adminUser.email,
-          aud: 'authenticated',
-          role: 'authenticated',
-          email_confirmed_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-          created_at: adminUser.created_at,
-          updated_at: new Date().toISOString()
-        } as User;
-        
-        // Create a mock session
-        const mockSession = {
-          access_token: 'mock_admin_token',
-          refresh_token: 'mock_refresh_token',
-          expires_in: 3600,
-          token_type: 'bearer',
-          user: mockUser
-        } as Session;
-        
-        setUser(mockUser);
-        setSession(mockSession);
-        return { error: null };
-      } else {
-        console.log('Password mismatch. Expected:', adminUser.password, 'Got:', password);
+      // Check password
+      if (password !== adminUser.password) {
+        console.log('Password mismatch');
         return { error: { message: 'Invalid email or password' } };
       }
+
+      // Try to sign in with Supabase Auth first
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (signInError && signInError.message === 'Invalid login credentials') {
+        // User doesn't exist in Supabase Auth, create them
+        console.log('Creating new Supabase user for admin');
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: undefined // Skip email confirmation
+          }
+        });
+
+        if (signUpError) {
+          console.error('Error creating Supabase user:', signUpError);
+          return { error: signUpError };
+        }
+
+        // If sign up was successful, the user should be automatically signed in
+        if (signUpData.user) {
+          console.log('Admin user created and signed in successfully');
+          setIsAdmin(true);
+          return { error: null };
+        }
+      } else if (signInError) {
+        console.error('Sign in error:', signInError);
+        return { error: signInError };
+      } else if (signInData.user) {
+        // Successful sign in
+        console.log('Admin signed in successfully');
+        setIsAdmin(true);
+        return { error: null };
+      }
+
+      return { error: { message: 'An unexpected error occurred' } };
     } catch (error) {
       console.error('Sign in error:', error);
       return { error };
@@ -132,10 +146,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    setUser(null);
-    setSession(null);
-    setIsAdmin(false);
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   return (
