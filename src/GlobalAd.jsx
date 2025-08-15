@@ -1,28 +1,36 @@
 import { useEffect } from "react";
 
-export default function GlobalAd() {
+export default function Ad() {
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "//pl27422384.profitableratecpm.com/7b07eac685c25792faed949f6fcd48cc/invoke.js";
-    script.async = true;
-    script.setAttribute("data-cfasync", "false");
+    // Define the atOptions object globally so the ad script can access it
+    window.atOptions = {
+      key: "f2a67666eb0d88a27db84396457aaa9a",
+      format: "iframe",
+      height: 90,
+      width: 728,
+      params: {},
+    };
 
-    const adContainer = document.getElementById("container-7b07eac685c25792faed949f6fcd48cc");
-    if (adContainer) {
-      adContainer.innerHTML = ""; // clear old ad if any
-      adContainer.appendChild(script);
+    // Create and append the ad script
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "//www.highperformanceformat.com/f2a67666eb0d88a27db84396457aaa9a/invoke.js";
+    script.async = true;
+
+    const container = document.getElementById("ad-container");
+    if (container) {
+      container.innerHTML = ""; // Clear old ad if it re-renders
+      container.appendChild(script);
     }
   }, []);
 
   return (
     <div
+      id="ad-container"
       style={{
         textAlign: "center",
         margin: "20px auto",
-        display: "block",
       }}
-    >
-      <div id="container-7b07eac685c25792faed949f6fcd48cc"></div>
-    </div>
+    ></div>
   );
 }

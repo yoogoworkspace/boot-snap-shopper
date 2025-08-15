@@ -35,7 +35,6 @@ const App = () => (
               <Route path="/order/:orderId" element={<Order />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <GlobalAd />
           </Layout>
         </BrowserRouter>
       </TooltipProvider>
