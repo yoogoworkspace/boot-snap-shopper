@@ -29,16 +29,6 @@ const Home = () => {
           <h1 className="text-6xl font-bold text-slate-900 mb-4 tracking-tight">
             BOOT BUCKET
           </h1>
-          <p className="text-xl text-muted-foreground mb-8">
-            Premium footwear collection for every occasion
-          </p>
-          
-          {/* New Shop Button */}
-          <Link to="/shop">
-            <Button className="btn-hero mb-8">
-              Shop Now - New Experience
-            </Button>
-          </Link>
         </div>
 
         {/* Category Cards */}

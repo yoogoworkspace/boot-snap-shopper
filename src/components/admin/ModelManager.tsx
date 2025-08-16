@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -179,11 +178,8 @@ export const ModelManager = () => {
       const { error } = await supabase
         .from('models')
         .insert([{
-          name: newModel.name,
-          price: parseFloat(newModel.price),
-          image_url: newModel.image_url,
-          category_id: newModel.category_id,
-          size_id: newModel.size_id
+          ...newModel,
+          price: parseFloat(newModel.price)
         }]);
 
       if (error) throw error;
