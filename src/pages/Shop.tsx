@@ -111,7 +111,7 @@ const Shop = () => {
 
       const { data, error } = await supabase
         .from('models')
-        .select('*')
+        .select('id, name, price, image_url, category_id, size_id, is_hidden')
         .eq('category_id', activeCategory)
         .eq('size_id', sizeData.id)
         .eq('is_hidden', false);

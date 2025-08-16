@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, ZoomIn } from "lucide-react";
@@ -54,11 +53,10 @@ const Models = () => {
 
       const { data: modelsData, error: modelsError } = await supabase
         .from('models')
-        .select('*')
+        .select('id, name, price, image_url, is_hidden')
         .eq('category_id', categoryData.id)
         .eq('size_id', sizeData.id)
         .eq('is_hidden', false);
-
 
       if (modelsError) throw modelsError;
       setModels(modelsData || []);
