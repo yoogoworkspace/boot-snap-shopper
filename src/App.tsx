@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
+import Shop from "./pages/Shop";
 import Sizes from "./pages/Sizes";
 import Models from "./pages/Models";
 import Cart from "./pages/Cart";
@@ -28,6 +29,7 @@ const App = () => (
             <GlobalAd />
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/shop" element={<Shop />} />
               <Route path="/sizes/:category" element={<Sizes />} />
               <Route path="/models/:category/:size" element={<Models />} />
               <Route path="/cart" element={<Cart />} />
