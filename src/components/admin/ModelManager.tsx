@@ -46,6 +46,11 @@ export const ModelManager = () => {
     size_id: "" 
   });
   const [uploading, setUploading] = useState(false);
+  
+  // New filter states
+  const [filterCategory, setFilterCategory] = useState<string>("");
+  const [filterSize, setFilterSize] = useState<string>("");
+  const [filteredModels, setFilteredModels] = useState<Model[]>([]);
 
   useEffect(() => {
     fetchModels();
@@ -56,7 +61,6 @@ export const ModelManager = () => {
   useEffect(() => {
     if (newModel.category_id) {
       const filtered = sizes.filter(size => size.category_id === newModel.category_id);
-      // Sort sizes numerically
       filtered.sort((a, b) => {
         const aNum = parseFloat(a.value);
         const bNum = parseFloat(b.value);
@@ -68,6 +72,21 @@ export const ModelManager = () => {
       setFilteredSizes(filtered);
     }
   }, [newModel.category_id, sizes]);
+
+  // Filter models based on selected filters
+  useEffect(() => {
+    let filtered = models;
+    
+    if (filterCategory) {
+      filtered = filtered.filter(model => model.category_id === filterCategory);
+    }
+    
+    if (filterSize) {
+      filtered = filtered.filter(model => model.size_id === filterSize);
+    }
+    
+    setFilteredModels(filtered);
+  }, [models, filterCategory, filterSize]);
 
   const fetchModels = async () => {
     try {
@@ -211,6 +230,11 @@ export const ModelManager = () => {
     }
   };
 
+  // Get sizes for the selected filter category
+  const getFilterSizes = () => {
+    if (!filterCategory) return sizes;
+    return sizes.filter(size => size.category_id === filterCategory);
+  };
 
   return (
     <Card className="shadow-lg">
@@ -228,6 +252,76 @@ export const ModelManager = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
+        {/* Filters */}
+        <Card className="mb-6 bg-slate-50 border-slate-200">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="filter-category">Filter by Category</Label>
+                <Select value={filterCategory} onValueChange={(value) => {
+                  setFilterCategory(value);
+                  setFilterSize(""); // Reset size filter when category changes
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="filter-size">Filter by Size</Label>
+                <Select value={filterSize} onValueChange={setFilterSize}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All sizes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All sizes</SelectItem>
+                    {getFilterSizes()
+                      .sort((a, b) => {
+                        const aNum = parseFloat(a.value);
+                        const bNum = parseFloat(b.value);
+                        if (!isNaN(aNum) && !isNaN(bNum)) {
+                          return aNum - bNum;
+                        }
+                        return a.value.localeCompare(b.value);
+                      })
+                      .map((size) => (
+                        <SelectItem key={size.id} value={size.id}>
+                          Size {size.value}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setFilterCategory("");
+                    setFilterSize("");
+                  }}
+                  className="w-full"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+            
+            <div className="mt-2 text-sm text-slate-600">
+              Showing {filteredModels.length} of {models.length} models
+            </div>
+          </CardContent>
+        </Card>
+
         {isAdding && (
           <Card className="mb-6 bg-blue-50 border-blue-200">
             <CardContent className="p-4">
@@ -328,7 +422,7 @@ export const ModelManager = () => {
         )}
 
         <div className="grid gap-4">
-          {models.map((model) => (
+          {filteredModels.map((model) => (
             <Card key={model.id} className="shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -373,6 +467,12 @@ export const ModelManager = () => {
               </CardContent>
             </Card>
           ))}
+          
+          {filteredModels.length === 0 && (
+            <div className="text-center py-8 text-slate-500">
+              {models.length === 0 ? "No models found" : "No models match the selected filters"}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
