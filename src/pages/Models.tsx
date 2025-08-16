@@ -86,7 +86,7 @@ const Models = () => {
 
       const { data: modelsData, error: modelsError } = await supabase
         .from('models')
-        .select('*')
+        .select('id, name, price, image_url, is_hidden')
         .eq('category_id', categoryData.id)
         .eq('size_id', sizeData.id)
         .eq('is_hidden', false);
@@ -223,8 +223,6 @@ const Models = () => {
   const closeZoomModal = () => {
     setZoomModal({ isOpen: false, imageUrl: '', alt: '' });
   };
-
-  const categoryName = category === 'football-boots' ? 'Football Boots' : 'Running & Formal Shoes';
 
   if (loading) {
     return (
