@@ -93,7 +93,13 @@ export const ModelManager = () => {
       const { data, error } = await supabase
         .from('models')
         .select(`
-          *,
+          id,
+          name,
+          price,
+          image_url,
+          category_id,
+          size_id,
+          is_hidden,
           category:categories(name),
           size:sizes(value)
         `)
