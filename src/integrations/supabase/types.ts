@@ -59,7 +59,6 @@ export type Database = {
           created_at: string | null
           id: string
           image_url: string | null
-          is_hidden: boolean | null
           name: string
           price: number
           size_id: string | null
@@ -69,7 +68,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string | null
-          is_hidden?: boolean | null
           name: string
           price: number
           size_id?: string | null
@@ -79,7 +77,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           image_url?: string | null
-          is_hidden?: boolean | null
           name?: string
           price?: number
           size_id?: string | null
