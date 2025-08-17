@@ -1,5 +1,5 @@
 
-import { Home, ShoppingCart, Shield } from "lucide-react";
+import { Home, ShoppingCart, Shield, Search } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,7 +35,7 @@ const BottomNavigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50 md:hidden">
       <div className="flex justify-around items-center max-w-md mx-auto">
         <Link to="/">
           <Button
@@ -49,6 +49,21 @@ const BottomNavigation = () => {
           >
             <Home className="h-5 w-5" />
             <span className="text-xs">Home</span>
+          </Button>
+        </Link>
+        
+        <Link to="/search">
+          <Button
+            variant={isActive("/search") ? "default" : "ghost"}
+            size="sm"
+            className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+              isActive("/search")
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Search className="h-5 w-5" />
+            <span className="text-xs">Search</span>
           </Button>
         </Link>
         
