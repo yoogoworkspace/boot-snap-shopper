@@ -70,42 +70,46 @@ const Sizes = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="border-b bg-white">
-        <div className="container mx-auto flex items-center px-4 py-4">
-          <Link to="/" className="mr-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-gray-700 hover:text-black"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">
-              {categoryName}
-            </h1>
-            <p className="text-sm text-gray-500">Select your size</p>
-          </div>
+      <div className="relative w-full h-40 md:h-56 bg-slate-900 flex items-center justify-center">
+        <img 
+          src={category === "football-boots" 
+            ? "/images/football-hero.jpg" 
+            : "/images/formal-hero.jpg"} 
+          alt={categoryName}
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
+        />
+        <div className="relative text-center text-white">
+          <h1 className="text-3xl md:text-4xl font-extrabold">{categoryName}</h1>
+          <p className="mt-1 text-sm md:text-base italic">
+            Performance starts with the perfect fit
+          </p>
         </div>
       </div>
 
       {/* Sizes */}
-      <div className="container mx-auto px-4 py-10">
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-4xl mx-auto">
-          {sizes.map((size) => (
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 max-w-5xl mx-auto">
+          {sizes.map((size, index) => (
             <Link key={size} to={`/models/${category}/${size}`} className="block">
-              <Card className="hover:shadow-md border border-gray-200 transition duration-200">
-                <CardContent className="p-6 flex flex-col items-center">
-                  <div className="text-lg font-medium text-gray-900">{size}</div>
-                  <div className="text-xs text-gray-500 mt-1">Size</div>
+              <Card
+                className="group text-center cursor-pointer border border-slate-200 hover:border-transparent hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <CardContent className="p-6">
+                  <div className="text-2xl md:text-3xl font-extrabold text-slate-900 group-hover:text-blue-600">
+                    {size}
+                  </div>
+                  <div className="text-sm text-slate-500 group-hover:text-slate-700">
+                    Size
+                  </div>
                 </CardContent>
               </Card>
             </Link>
           ))}
         </div>
-        <div className="mt-10">
+        
+        {/* Inspiration / NativeAd */}
+        <div className="mt-12">
+          <h2 className="text-xl font-bold text-slate-800 mb-4">Style Inspiration</h2>
           <NativeAd />
         </div>
       </div>
