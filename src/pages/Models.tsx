@@ -96,10 +96,12 @@ const Models = () => {
   };
 
   const openZoomModal = (imageUrl: string, alt: string) => {
+    console.log("Opening modal with:", imageUrl, alt);
     setZoomModal({ isOpen: true, imageUrl, alt });
   };
 
   const closeZoomModal = () => {
+    console.log("Closing modal");
     setZoomModal({ isOpen: false, imageUrl: '', alt: '' });
   };
 
@@ -155,7 +157,7 @@ const Models = () => {
                     onClick={() => openZoomModal(model.image_url, model.name)}
                     className="cursor-pointer w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all pointer-events-none">
                     <ZoomIn className="h-7 w-7 text-white opacity-0 group-hover:opacity-100 transition-all" />
                   </div>
                 </div>
@@ -177,11 +179,9 @@ const Models = () => {
           </div>
         )}
 
-        {/* Inspiration / NativeAd */}
-        <div className="mt-16">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">You may also like</h2>
+
           <NativeAd />
-        </div>
+
       </div>
 
       {/* Zoom Modal */}

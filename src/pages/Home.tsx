@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import NativeAd from "../NativeAd";
+import { motion } from "framer-motion";
 
 const Home = () => {
   const categories = [
@@ -22,50 +22,60 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="text-center py-14">
-        <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight">
-          Boot Bucket
-        </h1>
-        <p className="mt-4 text-lg text-slate-600">
-          Explore premium collections tailored for performance & style
-        </p>
-      </header>
-
-      {/* Categories */}
-      <main className="container mx-auto px-6 pb-20">
-        <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+      {/* Categories Section */}
+      <main className="container mx-auto px-6 py-20">
+        <motion.div
+          className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: {
+              transition: {
+                staggerChildren: 0.2,
+              },
+            },
+          }}
+        >
           {categories.map((category) => (
-            <Link key={category.id} to={`/sizes/${category.id}`}>
-              <Card className="group cursor-pointer overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 rounded-2xl">
-                <div className="relative">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-56 object-cover rounded-t-2xl"
-                  />
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${category.gradient} opacity-20 group-hover:opacity-30 transition-opacity duration-300 rounded-t-2xl`}
-                  />
-                </div>
-                <CardContent className="p-8 text-center">
-                  <h2 className="text-2xl font-semibold text-slate-900 mb-4">
-                    {category.name}
-                  </h2>
-                  <Button
-                    className={`bg-gradient-to-r ${category.gradient} text-white px-8 py-3 rounded-full font-medium hover:shadow-md transition-transform duration-300 group-hover:scale-105`}
-                  >
-                    Explore Collection
-                  </Button>
-                </CardContent>
-              </Card>
-            </Link>
+            <motion.div
+              key={category.id}
+              variants={{
+                hidden: { opacity: 0, y: 40 },
+                visible: { opacity: 1, y: 0 },
+              }}
+            >
+              <Link to={`/sizes/${category.id}`}>
+                <Card className="group relative overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500">
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="w-full h-64 object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${category.gradient} opacity-30 group-hover:opacity-50 transition-opacity duration-500`}
+                    />
+                  </div>
+                  <CardContent className="absolute inset-0 flex flex-col justify-center items-center text-center text-white p-6">
+                    <h2 className="text-3xl font-bold drop-shadow-lg mb-6">
+                      {category.name}
+                    </h2>
+                    <Button
+                      className="bg-white/90 text-slate-900 px-6 py-2 rounded-full font-medium shadow-md 
+                                hover:shadow-lg hover:scale-105 hover:bg-slate-900 hover:text-white 
+                                transition-all duration-300"
+                    >
+                      Explore Collection
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </main>
-
-      <NativeAd />
     </div>
   );
 };

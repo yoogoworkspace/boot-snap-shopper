@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -6,45 +7,65 @@ export const ImageZoomModal = ({
   isOpen,
   onClose,
   imageUrl,
-  alt
+  alt,
 }: {
   isOpen: boolean;
   onClose: () => void;
   imageUrl: string;
   alt: string;
 }) => {
-  return (
+  if (typeof window === "undefined") return null; // SSR safety
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-[9999]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose} // background click closes
+          onClick={onClose}
         >
-          {/* Close button */}
-          <button
-            className="absolute top-6 right-6 text-white hover:text-gray-300 transition"
-            onClick={onClose}
-          >
-            <X className="h-7 w-7" />
-          </button>
-
-          {/* Image */}
-          <motion.img
-            key={imageUrl}
-            src={imageUrl}
-            alt={alt}
-            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl cursor-zoom-in"
-            initial={{ scale: 0.8, opacity: 0 }}
+          {/* Center container */}
+          <motion.div
+            className="relative w-full max-w-5xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-white"
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
+            exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            onClick={(e) => e.stopPropagation()} // prevent closing on image click
-          />
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="absolute top-0 left-0 w-full flex justify-end p-4 bg-gradient-to-b from-white/70 to-transparent z-10">
+              <button
+                onClick={onClose}
+                className="text-gray-600 hover:text-gray-900 transition"
+              >
+                <X className="h-8 w-8" />
+              </button>
+            </div>
+
+            {/* Image */}
+            <div className="flex items-center justify-center bg-white">
+              <motion.img
+                key={imageUrl}
+                src={imageUrl}
+                alt={alt}
+                className="max-h-[85vh] object-contain select-none"
+                draggable={false}
+              />
+            </div>
+
+            {/* Caption */}
+            {alt && (
+              <div className="bg-gray-100 text-gray-800 text-center text-sm py-3">
+                {alt}
+              </div>
+            )}
+          </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };

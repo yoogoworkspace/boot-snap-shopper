@@ -146,9 +146,9 @@ const Cart = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
+    <div className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md shadow-sm border-b px-4 py-4">
+      <div className="sticky top-0 z-10 bg-white shadow-sm border-b px-4 py-4">
         <div className="container mx-auto flex items-center">
           <Link to="/" className="mr-4">
             <Button
@@ -181,7 +181,7 @@ const Cart = () => {
                 boots.
               </p>
               <Link to="/">
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300">
                   Start Shopping
                 </Button>
               </Link>
@@ -191,7 +191,7 @@ const Cart = () => {
               {cartItems.map((item, index) => (
                 <Card
                   key={item.id}
-                  className="shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                  className="shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CardContent className="p-6 flex items-center space-x-6">
@@ -252,7 +252,7 @@ const Cart = () => {
               ))}
 
               {/* Order Summary */}
-              <Card className="shadow-2xl bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border border-blue-100">
+              <Card className="shadow-xl border border-slate-200 bg-white">
                 <CardContent className="p-8 text-center space-y-6">
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-extrabold text-slate-900">
@@ -265,7 +265,7 @@ const Cart = () => {
 
                   <Button
                     onClick={requestOrder}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-bold py-4 text-lg rounded-2xl shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 text-lg rounded-2xl shadow-md hover:shadow-lg transform transition-all duration-300 hover:scale-105"
                   >
                     <MessageCircle className="h-5 w-5 mr-3" />
                     Place Order via WhatsApp
