@@ -109,7 +109,7 @@ const Sizes = () => {
         
         {/* Inspiration / NativeAd */}
         <div className="mt-12">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">Style Inspiration</h2>
+          
           <NativeAd />
         </div>
       </div>

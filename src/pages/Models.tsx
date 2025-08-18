@@ -114,62 +114,74 @@ const Models = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b px-4 py-4">
-        <div className="container mx-auto flex items-center">
-          <Link to={`/sizes/${category}`} className="mr-4">
-            <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              {categoryName}
-            </h1>
-            <p className="text-slate-600">Size {size}</p>
-          </div>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Hero Header */}
+      <div className="relative w-full h-44 md:h-60 bg-slate-900 flex items-center justify-center">
+        <img
+          src={category === "football-boots" 
+            ? "/images/football-hero.jpg" 
+            : "/images/formal-hero.jpg"}
+          alt={categoryName}
+          className="absolute inset-0 w-full h-full object-cover opacity-70"
+        />
+        <div className="relative text-center text-white">
+          <h1 className="text-3xl md:text-4xl font-extrabold">{categoryName}</h1>
+          <p className="mt-1 text-sm md:text-base italic">
+            Find your perfect pair — Size {size}
+          </p>
         </div>
       </div>
 
       {/* Models */}
       <div className="container mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {models.map((model, index) => (
-            <Card
-              key={model.id}
-              className="overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
-              style={{ animationDelay: `${index * 150}ms` }}
-            >
-              <div className="relative group">
-                <img
-                  src={model.image_url || "fallback.jpg"}
-                  alt={model.name}
-                  onClick={() => openZoomModal(model.image_url, model.name)}
-                  className="cursor-pointer"
-                />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center pointer-events-none">
-                <div className="bg-white/90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75">
-                  <ZoomIn className="h-6 w-6 text-slate-800" />
+        {models.length === 0 ? (
+          <div className="text-center text-slate-600 py-12">
+            <p className="text-lg">No models available in this size right now.</p>
+            <p className="text-sm mt-2">Check back soon or explore other categories.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
+            {models.map((model, index) => (
+              <Card
+                key={model.id}
+                className="overflow-hidden border border-slate-200 hover:border-blue-500/50 shadow-md hover:shadow-xl transition-all duration-300 rounded-2xl group"
+                style={{ animationDelay: `${index * 120}ms` }}
+              >
+                {/* Image with zoom overlay */}
+                <div className="relative">
+                  <img
+                    src={model.image_url || "fallback.jpg"}
+                    alt={model.name}
+                    onClick={() => openZoomModal(model.image_url, model.name)}
+                    className="cursor-pointer w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all">
+                    <ZoomIn className="h-7 w-7 text-white opacity-0 group-hover:opacity-100 transition-all" />
+                  </div>
                 </div>
-              </div>
-              </div>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{model.name}</h3>
-                <p className="text-2xl font-bold text-blue-600 mb-4">₹{model.price}</p>
-                <Button
-                  onClick={() => addToCart(model)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+
+                {/* Info */}
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-slate-900 mb-1">{model.name}</h3>
+                  <p className="text-lg font-semibold text-slate-700 mb-4">₹{model.price}</p>
+                  <Button
+                    onClick={() => addToCart(model)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-full transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add to Cart
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Inspiration / NativeAd */}
+        <div className="mt-16">
+          <h2 className="text-xl font-bold text-slate-800 mb-4">You may also like</h2>
+          <NativeAd />
         </div>
-        <NativeAd />
       </div>
 
       {/* Zoom Modal */}
@@ -181,6 +193,7 @@ const Models = () => {
       />
     </div>
   );
+
 };
 
 export default Models;
