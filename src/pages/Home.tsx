@@ -22,9 +22,14 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col items-center">
+      {/* Title */}
+      <h1 className="text-5xl font-extrabold text-slate-800 mt-8 mb-12">
+        Boot Bucket
+      </h1>
+
       {/* Categories Section */}
-      <main className="container mx-auto px-6 py-20">
+      <main className="container mx-auto px-6 py-0">
         <motion.div
           className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto"
           initial="hidden"
