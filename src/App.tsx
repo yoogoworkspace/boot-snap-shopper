@@ -25,7 +25,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter basename="/bootbucket">
           <Layout>
-            <GlobalAd />
+            
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/sizes/:category" element={<Sizes />} />

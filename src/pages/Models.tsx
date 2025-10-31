@@ -180,7 +180,6 @@ const Models = () => {
         )}
 
 
-          <NativeAd />
 
       </div>
 

@@ -256,7 +256,7 @@ const Order = () => {
           </Card>
         </div>
       </div>
-      <NativeAd />
+
     </div>
   );
 };
