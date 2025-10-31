@@ -14,7 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          password: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          password: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          password?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      models: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_hidden: boolean
+          name: string
+          price: number
+          size_id: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_hidden?: boolean
+          name: string
+          price: number
+          size_id?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_hidden?: boolean
+          name?: string
+          price?: number
+          size_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "models_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "models_size_id_fkey"
+            columns: ["size_id"]
+            isOneToOne: false
+            referencedRelation: "sizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          model_id: string | null
+          order_id: string
+          price: number
+          quantity: number
+          size_value: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          model_id?: string | null
+          order_id: string
+          price: number
+          quantity: number
+          size_value?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          model_id?: string | null
+          order_id?: string
+          price?: number
+          quantity?: number
+          size_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_address: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          status: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          status?: string
+          total_amount: number
+        }
+        Update: {
+          created_at?: string
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          status?: string
+          total_amount?: number
+        }
+        Relationships: []
+      }
+      sizes: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          value: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          value: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sizes_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_accounts: {
+        Row: {
+          account_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          phone_number: string
+        }
+        Insert: {
+          account_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          phone_number: string
+        }
+        Update: {
+          account_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          phone_number?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
