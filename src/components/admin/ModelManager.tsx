@@ -144,8 +144,9 @@ export const ModelManager = () => {
       const { error: uploadError } = await supabase.storage.from("model-images").upload(fileName, file);
       if (uploadError) throw uploadError;
 
-      const { data, error: urlError } = supabase.storage.from("model-images").getPublicUrl(fileName);
-      if (urlError || !data?.publicUrl) throw urlError || new Error("No URL returned");
+      const { data } = supabase.storage.from("model-images").getPublicUrl(fileName);
+      if (!data?.publicUrl) throw new Error("No URL returned");
+
 
       setNewModel({ ...newModel, image_url: data.publicUrl });
       toast.success("Image uploaded successfully!");
